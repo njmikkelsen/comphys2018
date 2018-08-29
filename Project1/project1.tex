@@ -45,20 +45,95 @@ Abstract.
 \maketitle
 
 % body
+\section*{About Project 1}
+This is a report for Project 1 in FYS3150 - Computational Physics at UiO, due September \(10^{\text{th}}\), 2018. The project description was accessed August \(27^{\text{th}}\), 2018 with this web address:\\
+{\scriptsize\url{http://compphysics.github.io/ComputationalPhysics/doc/Projects/2018/Project1/pdf/Project1.pdf}}\\
+All material written for this report can be found in this GitHub repository:\\
+{\scriptsize\url{https://github.com/njmikkelsen/comphys2018}}
 \section{Introduction}
-It is the object of this report to investigate the central finite difference approximation in relation to linear ordinary second order differential equations without first order terms. The report is most concerned with the accuracy of the approximation and the efficiency of tridiagonal matrix equation algorithms used during the numerical integration. The algorithms presented in this report will finally be compared standard matrix solving algorithms based on LU matrix decomposition.
+It is the object of this report to investigate central finite difference approximation methods in relation to linear second order ordinary differential equations without first order terms. The report is most concerned with the accuracy of the approximation, including errors related to floating point arithmetic, and the efficiency of tridiagonal matrix equation algorithms used in the numerical integration. The algorithms presented in this report will finally be compared to standard matrix solving algorithms based on LU matrix decomposition.
 \section{Theory}
-\subsection{The Differential Equation}
+\subsection{Linear Second Order Ordinary Differential Equations without First Order Terms}
+\subsubsection{The general equation}
+A linear second order ordinary differential equation (ODE) without first order terms can be written as
+\begin{equation}\label{eq:main_differential_equation}
+\dv[2]{x}y(x)+k(x)^2y(x)=f(x)
+\end{equation}
+where \(x\) and \(y=y(x)\) are the independent and dependent variables, \(k(x)\) is a variable coefficient and \(f(x)\) is the so-called \emph{source} term. The most famous example of equation \eqref{eq:main_differential_equation} in Physics is Newton's Second Law of Motion. Section \ref{sec:poisson_equation} introduces another common example, namely Poisson's equation from electrostatics.
+\subsubsection{A specific case}\label{sec:specific_case}
+Let \(k(x)=0\) and \(f(x)=-100e^{-10x}\) such that equation \ref{eq:main_differential_equation} may be simplified to
+\begin{equation}\label{eq:specific_differential_equation}
+\dv[2]{x}y(x)=-100e^{-10x}
+\end{equation}
+The solution to equation \eqref{eq:specific_differential_equation}, namely \(y(x)\), is easily found by integrating twice (note that the second integration constant is defined as \(-10C_1\) in order to arrive on a simpler equation):
+\begin{align}
+y(x)&=\int\dd{x}\int\dd{x}\dv[2]{x}y(x)\nonumber\\
+&=-100\int\dd{x}\int\dd{x}e^{-10x}\nonumber\\
+&=10\int\dd{x}\Big[e^{-10x}-10C_1\Big]\nonumber\\
+y(x)&=-e^{-10x}+C_1x+C_2\label{eq:general_solution_to_specific}
+\end{align}
+Furthermore, introducing the boundary conditions:
+\[y(x=0)=y(x=1)=0\]
+imposes restraints on \(C_1\) and \(C_2\) such that
+\begin{equation}\label{eq:specific_solution_to_specific}
+y(x)=-e^{-10x}+(1-e^{-10x})x+1
+\end{equation}
+\subsection{Poisson's Equation from Electrostatics}\label{sec:poisson_equation}
+\subsubsection{Derivation}
+Using Gaussian units, Gauss's law of electricity and the Maxwell-Faraday equation may be written as
+\begin{align}
+\div\vb{E}&=4\pi\rho\label{eq:gauss_law}\\
+\curl\vb{E}&=-c^{-1}\pdv{t}\vb{B}\label{eq:maxwell-farady_equation}
+\end{align}
+where \(\vb{E}\) and \(\vb{B}\) are the electric field and the magnetic flux density, \(\rho\) is the scalar electric charge distribution and \(c\) is the speed of light.
 
+Assuming electrostatics implies that \(\pdv*{B}{t}=0\), which further implies that \(\curl\vb{E}=0\). As the curl of \(\vb{E}\) is zero, \(\vb{E}\) is defined by scalar electric potential \(\varphi\):
+\begin{equation}\label{eq:electric_field_from_potential}
+\vb{E}=-\grad\varphi
+\end{equation}
+Finally, combining equations \eqref{eq:gauss_law} and \eqref{eq:electric_field_from_potential} yields Poisson's equation:
+\begin{equation}\label{eq:poisson_equation_electrostatics}
+\laplacian\varphi=-4\pi\rho
+\end{equation}
+\newpage
+\subsubsection{Further development using a spherical distribution}
+Assuming a spherically symmetric charge distribution \(\rho=\rho(r)\) allows for further simplification of equation \eqref{eq:poisson_equation_electrostatics} (the angular terms in \(\laplacian\varphi\) are ignored due to symmetry):
+\begin{align*}
+\laplacian\varphi(r)&=r^{-2}\dv{r}\Big[r^2\dv{r}\varphi(r)\Big]=r^{-2}\Big[2r\varphi(r)+r^2\dv[2]{r}\varphi(r)\Big]\\
+&=r^{-1}\Big[\varphi(r)+r\dv{r}\varphi(r)\Big]=r^{-1}\dv[2]{r}\Big[r\varphi(r)\Big]
+\end{align*}
+Finally, define \(\phi=\varphi(r)/r\) such that Poisson's equation can be written as
+\begin{equation}\label{eq:final_poisson_equation}
+\dv[2]{r}\phi(r)=-4\pi r\rho(r)
+\end{equation}
+Equation \eqref{eq:final_poisson_equation} is recognised as a special case of equation \eqref{eq:main_differential_equation} with
+\[y(x)=\phi(x)\qcomma k(x)=0\qand f(x)=-4\pi x\rho(x)\]
+To arrive on the specific case introduced in section \ref{sec:specific_case}, the charge distribution must be given by:
+\[\rho(r)=\frac{25}{\pi}r^{-1}e^{-10r}\]
 \section{Method}
+The main equation that is solved in this report is equation \eqref{eq:specific_differential_equation} with Dirichet boundary conditions \(y(0)=y(1)=0\), such that the analytic solution is given by equation \eqref{eq:specific_solution_to_specific}.
+\subsection{•}
+
+
+
+
+
+
+
+
+
+\clearpage
 \section{Results}
 \section{Discussion}
 \section{Conclusion}
-\begin{acknowledgments}
-Acknowledgements.
-\end{acknowledgments}
 \cite{dirac}\cite{einstein}
 \bibliographystyle{plain}
 \bibliography{references}
+	 
+
+
+
+
+
 
 \end{document}
