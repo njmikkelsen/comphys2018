@@ -68,18 +68,18 @@ Let \(k(x)=0\) and \(f(x)=-100e^{-10x}\) such that equation \ref{eq:main_differe
 \begin{equation}\label{eq:specific_differential_equation}
 \dv[2]{x}y(x)=-100e^{-10x}
 \end{equation}
-The solution to equation \eqref{eq:specific_differential_equation}, namely \(y(x)\), is easily found by integrating twice (note that the second integration constant is defined as \(-10C_1\) in order to arrive on a simpler equation):
+The solution to equation \eqref{eq:specific_differential_equation}, namely \(y(x)\), is easily found by integrating twice:
 \begin{align}
-y(x)&=\int\dd{x}\int\dd{x}\dv[2]{x}y(x)\nonumber\\
-&=-100\int\dd{x}\int\dd{x}e^{-10x}\nonumber\\
-&=10\int\dd{x}\Big[e^{-10x}-10C_1\Big]\nonumber\\
-y(x)&=-e^{-10x}+C_1x+C_2\label{eq:general_solution_to_specific}
+\dv{x}y(x)&=-10^2\int\dd{x}e^{-10x}\nonumber\\
+&=10e^{-10x}+C_1\nonumber\\[2mm]
+y(x)&=10\int\dd{x}e^{-10x}+C_1x\nonumber\\
+&=-e^{-10x}+C_1x+C_2\label{eq:general_solution_to_specific}
 \end{align}
 Furthermore, introducing the boundary conditions:
 \[y(x=0)=y(x=1)=0\]
 imposes restraints on \(C_1\) and \(C_2\) such that
 \begin{equation}\label{eq:specific_solution_to_specific}
-y(x)=-e^{-10x}+(1-e^{-10x})x+1
+y(x)=1-(1-e^{-10})x-e^{-10x}
 \end{equation}
 \subsection{Poisson's Equation from Electrostatics}\label{sec:poisson_equation}
 \subsubsection{Derivation}
@@ -436,7 +436,7 @@ The relative error is highly dependent on the value of \(n\), often changing by 
 (Here, it is implied that the logarithm is with respect to base 10.)
 The greater number of FLOPS an algorithm requires, the more prone the algorithm is to accumulated errors from floating point arithmetic. This error is also contained in \(\epsilon_i\), thus the various algorithms may achieve different relative errors depending on the number of grid points.
 \subsubsection{Efficiency}
-As already mentioned, the different algorithms require different number of FLOPS, thus performing with different efficiencies. This efficiency \(eff\) is easily measured using the computer's CPU time. The uncertainty in this calculation depends on the CPU time granularity, and the precision of the time ticks. The granularity is easily found, but the precision of the ticks is difficult to handle. Thus, the uncertainty should be considered as an estimate of the standard deviation as opposed to a strict uncertainty.
+As already mentioned, the different algorithms require different number of FLOPS, thus performing with different efficiencies. Measuring the efficiency of an algorithm is easily done using the computer's CPU time. However, the uncertainty in this calculation depends on the CPU time granularity, and the precision of the time ticks. The granularity is easily found, but the precision of the ticks is difficult to handle. Thus, the uncertainty should be considered as an estimate of the standard deviation as opposed to a strict uncertainty.
 \clearpage
 \section{Results}
 
