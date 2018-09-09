@@ -36,17 +36,17 @@ double* gen_y (int n, double h, double* x) {
 void save_data (int n, string alg, double dt, double T,
                 double* x, double* exact, double* y) {
   int i;
-  string filename = to_string(n) + "_" + alg + ".dat";
+  string filename = alg + "_" + to_string(n) + ".dat";
   ofstream outfile("data/"+filename, ios::trunc);
-  outfile << "n         = " << n << endl;
+  outfile << "n         = " << n   << endl;
   outfile << "algorithm = " << alg << endl;
   outfile << "no. ticks = " << setprecision(16) <<  T << endl;
   outfile << "ticks/sec = " << setprecision(16) << dt << endl;
   outfile << "-----------------------------------------------------" << endl;
   outfile << "        x        |     y_exact     |      y_num" << endl;
   for (i=0; i<n; i++) {
-    outfile << " " << left << scientific << setprecision(9) << setw(10)
-            << x[i] << " | " << exact[i] << " | " << y[i] << endl;
+    outfile << " "  << left  << scientific << setprecision(9) << setw(10)
+            << x[i] << " | " << exact[i]   << " | "           << y[i]     << endl;
   }
   cout << "data saved in 'data/" << filename << "'." << endl;
 };
