@@ -90,7 +90,7 @@ Using Gaussian units, Gauss's law of electricity and the Maxwell-Faraday equatio
 \end{align}
 where \(\vb{E}\) and \(\vb{B}\) are the electric field and the magnetic flux density, \(\rho\) is the scalar electric charge distribution and \(c\) is the speed of light.
 
-Assuming electrostatics implies that \(\pdv*{B}{t}=0\), which further implies that \(\curl\vb{E}=0\). As the curl of \(\vb{E}\) is zero, \(\vb{E}\) is defined by scalar electric potential \(\varphi\):
+Assuming electrostatics implies that \(\pdv*{\vb{B}}{t}=0\), which further implies that \(\curl\vb{E}=0\). As the curl of \(\vb{E}\) is zero, \(\vb{E}\) is defined by scalar electric potential \(\varphi\):
 \begin{equation}\label{eq:electric_field_from_potential}
 \vb{E}=-\grad\varphi
 \end{equation}
@@ -297,7 +297,7 @@ v_{n-1}+\rho_2v_n&=u'_n
 where
 \begin{align*}
 &\rho_1=\frac{c}{b}\qc\rho_2=\frac{b}{a}\qc\rho_3=\frac{c}{a},\\
-&u'_1=\frac{u_1}{a}\qand u'_i=\frac{u_i}{b}\qq{for}i=2,\ldots,n.
+&u'_1=\frac{u_1}{b}\qand u'_i=\frac{u_i}{a}\qq{for}i=2,\ldots,n.
 \end{align*}
 This initial operation requires 3 FLOPS for \(\rho_1\), \(\rho_2\) and \(\rho_3\), in addition to \(n\) FLOPS for \(\vb{u}'\). Hence,
 \begin{equation}
