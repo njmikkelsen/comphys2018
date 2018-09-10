@@ -55,6 +55,7 @@ n, alg, T, dt, x, exact, y = [], [], [], [], [], [], []
 for File,i in zip(added_files,range(len(added_files))):
   with open("./data/"+File, 'r') as F:
     data = F.readlines()
+    # read initial lines and prepare arrays
     n.    append(int(  data[0].split("=")[-1].strip()))
     alg.  append(      data[1].split("=")[-1].strip())
     T.    append(float(data[2].split("=")[-1].strip()))
@@ -62,6 +63,7 @@ for File,i in zip(added_files,range(len(added_files))):
     x.    append(np.zeros(len(data[6:])))
     exact.append(np.zeros(len(data[6:])))
     y.    append(np.zeros(len(data[6:])))
+    # read data
     for Line,j in zip(data[6:],range(len(data[6:]))):
       line        = Line.split("|")
       x[i][j]     = float(line[0].strip())
@@ -78,6 +80,21 @@ for i in range(len(added_files)):
   h[i]       = 1./(float(n[i])+1)
   max_eps[i] = np.max(eps[i])
 print("Done.")
+print("---------------------------------------------------------------")
+print("Plotting various function plots and error plots.")
+
+# plot solutions on top of exact
+for i in range(len(added_files)):
+  fig = plt.figure("Function plot", figsize=(10,8))
+  ax  = fig.add_subplot(111)
+  ax.set_title("Function plot\nSolution found using '{:s}' with n = {:d}".\
+               format(alg[i],n[i]), fontsize=22)
+  ax.set_xlabel(r"$x$", fontsize=18); ax.set_xlim([0,1])
+  ax.set_ylabel(r"$y$", fontsize=18)
+  ax.plot(x[i],y[i],x[i],exact[i])
+  ax.legend(["numerical","exact"])
+  plt.savefig("figures/{:s}_{:d}_funcplot.png".format(alg[i],n[i]))
+  plt.show()
 
 # plot relative error evolution for each data file
 for i in range(len(added_files)):
@@ -86,29 +103,38 @@ for i in range(len(added_files)):
   # axes 1 - linear plot
   ax1 = fig.add_subplot(211)
   ax1.set_title("Relative error using '{:s}' with n = {:d}".format(alg[i],n[i]), fontsize=22)
-  ax1.set_xlabel(r"$x$", fontsize=14); ax1.set_xlim([0,1])
-  ax1.set_ylabel(r"$\epsilon$", fontsize=14)
+  ax1.set_xlabel(r"$x$", fontsize=18); ax1.set_xlim([0,1])
+  ax1.set_ylabel(r"$\epsilon$", fontsize=18)
   ax1.plot(x[i],eps[i])
   # axes 2 - logarithmic plot
   ax2 = fig.add_subplot(212)
   ax2.set_title("Logarithmic relative error using '{:s}' with n = {:d}".format(alg[i],n[i]), fontsize=22)
-  ax2.set_xlabel(r"$x$", fontsize=14); ax2.set_xlim([0,1])
-  ax2.set_ylabel("logarithmic relative error", fontsize=14)
+  ax2.set_xlabel(r"$x$", fontsize=18); ax2.set_xlim([0,1])
+  ax2.set_ylabel(r"$\log(\varepsilon)$", fontsize=18)
   ax2.plot(x[i],eps[i]); ax2.set_yscale("log")
   # finish figure
   plt.tight_layout()
-  plt.savefig("figures/{:s}_{:d}_relerror.png".format(alg[i],n[i]))
+  plt.savefig("figures/{:s}_{:d}_error.png".format(alg[i],n[i]))
   plt.show()
 
 # scatter plot logarithmic relative error against logarithmic step length
 for algorithm,i in zip(["LU","general","special","taylored"],range(4)):
   if (k[i+1]-k[i]) > 0:
-    fig = plt.figure("Relative error with respect to step length", figsize=(10,8))
+    fig = plt.figure("Maximum relative error with respect to step length", figsize=(10,8))
     ax  = fig.add_subplot(111)
-    ax.set_title("Logarithmic relative error with respect to logarithmic\nstep length using '{:s}'".\
+    ax.set_title("Logarithmic maximum relative error with respect to\nlogarithmic step length using '{:s}'".\
                  format(algorithm), fontsize=22)
-    ax.set_xlabel(r"$\log(h)$", fontsize=14)
-    ax.set_ylabel(r"$\varepsilon$", fontsize=18)
+    ax.set_xlabel(r"$\log(h)$", fontsize=18)
+    ax.set_ylabel(r"$\log(\varepsilon)$", fontsize=18)
     ax.scatter(np.log10(h[k[i]:k[i+1]]),np.log10(max_eps[k[i]:k[i+1]]))
+    plt.savefig("figures/{:s}_maxerror.png".format(algorithm))
     plt.show()
+
+# print time spent
+print("""Time spent calculating the solutions:
+
+algorithm        n        time spent
+---------------------------------------""")
+for i in range(len(added_files)):
+  print("{:11s}|{:11d}| {:9f} sec".format(alg[i],n[i],T[i]/dt[i]))
 

@@ -439,7 +439,31 @@ The greater number of FLOPS an algorithm requires, the more prone the algorithm 
 As already mentioned, the different algorithms require different number of FLOPS, thus performing with different efficiencies. Measuring the efficiency of an algorithm is easily done using the computer's CPU time. However, the uncertainty in this calculation depends on the CPU time granularity, and the precision of the time ticks. The granularity is easily found, but the precision of the ticks is difficult to handle. Thus, the uncertainty should be considered as an estimate of the standard deviation as opposed to a strict uncertainty.
 \clearpage
 \section{Results}
-
+\subsection{The generalised algorithm}
+Figures \ref{fig:gen_alg_n10}, \ref{fig:gen_alg_n100} and \ref{fig:gen_alg_n1000} show plots of the numerical solutions provided by the generalised algorithm with \(n=10\), 100 and 1000 grid points respectively. It is immediately obvious that this algorithm quickly approaches the exact solution: already with \(n=100\), the difference is minimal. Furthermore, table \ref{tab:time_gen_alg_n10} shows the average time spent during calculation. The impact from increasing \(n\) from 10 to 100 is actually much less (in proportion) to increasing \(n\) from 10 to 100. That is, there seems to be a non-linear relationship between \(n\) and time spent.
+\begin{figure}[h]
+\includegraphics[scale=0.28]{figures/general_10_funcplot.png}
+\caption{A plot of the numerical solution on top of the exact solution. Numerical solution calculated using the generalised algorithm with \(n=10\).}\label{fig:gen_alg_n10}
+\end{figure}
+\begin{figure}[h]
+\includegraphics[scale=0.28]{figures/general_100_funcplot.png}
+\caption{A plot of the numerical solution on top of the exact solution. Numerical solution calculated using the generalised algorithm with \(n=100\).}\label{fig:gen_alg_n100}
+\end{figure}
+\begin{figure}[h]
+\includegraphics[scale=0.28]{figures/general_1000_funcplot.png}
+\caption{A plot of the numerical solution on top of the exact solution. Numerical solution calculated using the generalised algorithm with \(n=1000\).}\label{fig:gen_alg_n1000}
+\end{figure}
+\begin{table}[h]
+\caption{Average time spent by the generalised algorithm during a calculation.}\label{tab:time_gen_alg_n10}
+\begin{tabular}{|c|c|}
+\hline
+\(n\) & time spent \\\hline
+  10  & 0.010 ms \\\hline
+ 100  & 0.019 ms \\\hline
+1000  & 0.126 ms \\\hline
+\end{tabular}
+\end{table}
+\subsection{The specialised and taylored algorithms}
 
 
 
