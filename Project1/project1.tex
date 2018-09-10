@@ -43,18 +43,22 @@
 \date{\today}
 \noaffiliation
 \begin{abstract}
-Abstract.
+A linear second order ordinary differential equation is discretised using a finite difference approximation leading to a tridiagonal matrix equation with constant diagonal entries. The problem is solved using four different algorithms: an LU decomposition-based approach, the Thomas algorithm for tridiagonal matrix equations, a simplification of the Thomas algorithm using constant diagonal entries and a final simplification based on knowing the specific entries in the tridiagonal matrix. The LU decomposition is shown to be very ineffective compared to the other algorithms, while the Thomas algorithm and the first simplified algorithm both significantly improve on the efficiency of the overall computation. The final algorithm is shown to yield no further improvement over the already-simplified algorithm. Adequate numerical solutions with relative errors on the scale \(8.3\cdot10^{-6}\) are achieved using a discretisation with \(n=1000\) grid points.
 \end{abstract}
 \maketitle
 
 % body
 \section*{About Project 1}
-This is a report for Project 1 in FYS3150 - Computational Physics at UiO, due September \(10^{\text{th}}\), 2018. The project description was accessed August \(27^{\text{th}}\), 2018 with this web address:\\
+This is a report for Project 1 in FYS3150 Computational Physics at UiO, due September \(10^{\text{th}}\), 2018. \cite{project1} The project description was accessed August \(27^{\text{th}}\), 2018 with the following web address:\\
 {\scriptsize\url{http://compphysics.github.io/ComputationalPhysics/doc/Projects/2018/Project1/pdf/Project1.pdf}}\\
 All material written for this report can be found in this GitHub repository:\\
-{\scriptsize\url{https://github.com/njmikkelsen/comphys2018}}
+{\scriptsize\url{https://github.com/njmikkelsen/comphys2018/tree/master/Project1}}
 \section{Introduction}
-It is the object of this report to investigate central finite difference approximation methods in relation to linear second order ordinary differential equations without first order terms. The report is most concerned with the accuracy of the approximation, including errors related to floating point arithmetic, and the efficiency of tridiagonal matrix equation algorithms used in the numerical integration. The algorithms presented in this report will finally be compared to standard matrix solving algorithms based on LU matrix decomposition.
+Many problems in physics boil down to a second order ordinary differential equation. It is the object of this report to investigate four different numerical algorithms for solving a such equation derived from electrostatics, namely Poisson's equation. By discretising the second order differential using a central finite difference approximation, the differential equation is effectively split into a system of linear equations. This system may be combined into a more compact matrix notation such that the problem becomes a linear algebra problem. This specific problem happens to include a tridiagonal matrix, whose solution may be found using various approaches.
+
+It is the object of this report to investigate four different numerical algorithms for solving the tridigonal matrix equation. The report is most concerned with the accuracy of the approximation, including errors related to floating point arithmetic, and the algorithms' efficiency. The four algorithms include an LU decomposition algorithm and three tridiagonal matrix equation algorithms.
+
+The LU decomposition is performed using the \texttt{C++} library \texttt{armadillo}. The first tridiagonal matrix algorithm is the standard Thomas algorithm for solving tridiagonal matrix equations, the next algorithm is a simplification of the Thomas algorithm based on constant diagonal entries. Finally, the last algorithm is based on knowing the exact entries in the specific tridiagonal matrix that is going to be solved.
 \section{Theory}
 \subsection{Linear Second Order Ordinary Differential Equations without First Order Terms}
 \subsubsection{The general equation}
@@ -98,7 +102,6 @@ Finally, combining equations \eqref{eq:gauss_law} and \eqref{eq:electric_field_f
 \begin{equation}\label{eq:poisson_equation_electrostatics}
 \laplacian\varphi=-4\pi\rho
 \end{equation}
-\newpage
 \subsubsection{Further development using a spherical distribution}
 Assuming a spherically symmetric charge distribution \(\rho=\rho(r)\) allows for further simplification of equation \eqref{eq:poisson_equation_electrostatics} (the angular terms in \(\laplacian\varphi\) are ignored due to symmetry):
 \begin{align*}
@@ -119,7 +122,6 @@ The Taylor expansion of any single-variable function \(f(x)\), centered about \(
 f(x)&= f(a)+f'(a)(x-a)+\frac{f''(a)}{2}(x-a)^2\nonumber\\
 &\quad +\frac{f'''(a)}{6}(x-a)^3+\frac{f^{(4)}(a)}{24}(x-a)^4+\cdots\label{eq:second_order_taylor_expansion}
 \end{align}
-
 Let \(a=x_0\) and \(x=x_0\pm\Delta x\) such that:
 \begin{align}
 f(x_0\pm\Delta x)&=f(x_0)\pm f'(x_0)\Delta x+\frac{f''(x_0)}{2}{\Delta x}^2\nonumber\\
@@ -146,7 +148,9 @@ Using the discretised variables, equation \eqref{eq:specific_differential_equati
 \begin{equation}
 y''(x_i)=\frac{y_{i-1}-2y_i+y_{i+1}}{h^2}+\order{h^2}
 \end{equation}
-where \(\order{h^2}\) is local truncation error. With \(n\) approximations, the global truncation error is \(n\order{h^2}\approx\order{h}\) for small \(h\). The differential equation may thus be written as a coupled system of linear equations:
+where \(\order{h^2}\) is local truncation error. With \(n\) approximations, the global truncation error is \(n\order{h^2}\approx\order{h}\) for small \(h\).
+\newpage
+The differential equation may thus be written as a coupled system of linear equations:
 \begin{align*}
 y_0-2y_1+y_2&=h^2f_1\\
 y_1-2y_2+y_3&=h^2f_2\\
@@ -166,7 +170,6 @@ By introducing the new variable \(\tilde{y}_i=y_i/h^2\), the matrix equation may
 D\tilde{\vb{y}}=\vb{f}
 \end{equation}
 where \(D\) is the left hand side tridiagonal matrix, and \(\tilde{\vb{y}}\) and \(\vb{f}\) are column vectors.
-\newpage
 \subsection{Matrix Equation Algorithms}
 The goal now is to develope a series of algorithms that are capable of solving equation \eqref{eq:matrix_equation_to_solve}. The algorithms have varying ``degrees of knowledge" of the equation in that they are based on different assumptions. However, all algorithms assume the matrix is a square matrix. Limited by their assumptions, the scope of the algorithms' areas of application differ (although they obviously share the ability to solve equation \eqref{eq:matrix_equation_to_solve}) and thus solve the same matrix equations with different efficiencies.
 
@@ -177,8 +180,9 @@ To avoid having to reintroduce notation, the following definitions will be used 
 M\vb{v}=\vb{u}
 \end{equation}
 where \(M\) is an \(n\times n\) matrix with entries \(m_{ij}\), and \(\vb{v}\) and \(\vb{u}\) are \(n\)-dimensional vectors with entries \(v_i\) and \(u_i\) respectively. Note that \(i,j\in\{1,\ldots,n\}\).
-\subsubsection{General matrix equation algorithm:\\LU Decomposition}
-The first algorithm to be presented in this report is the well-known LU-Decomposition solution. The process is divided into two components: the LU-factorisation and solving the resulting matrix equations. As it happens, Project 1 does not require the report to include an in-depth description of LU-Decompositioning. The details surrounding the algorithm are therefore ignored. Nevertheless, the general principle behind the solution is explained below. When later performing the LU-decomposition numerically, a standard algorithm supplied by the \emph{armadillo} library is used.
+\newpage
+\subsubsection{General matrix equation algorithm:\\LU decomposition}
+The first algorithm to be presented in this report is the well-known LU decomposition solution. The process is divided into two components: the LU factorisation and solving the resulting matrix equations. As it happens, Project 1 does not require the report to include an in-depth description of LU decompositioning. The details surrounding the algorithm are therefore ignored. Nevertheless, the general principle behind the solution is explained below. When later performing the LU decomposition numerically, a standard algorithm supplied by the \texttt{armadillo} library is used.
 
 Suppose the matrix \(M\) may be written as the product of two matrices \(L\) and \(U\): \(M=LU\), where \(L\) is a unit (diagonal entries equals 1) \emph{lower} triangular matrix and \(U\) is an \emph{upper} triangular matrix. Equation \eqref{eq:general_linear_matrix_equation} may thus be written as \(L(U\vb{v})=\vb{u}\), which can be further separated as two matrix equations:
 \begin{equation}\label{eq:LU_decomposed_equations}
@@ -189,13 +193,13 @@ There are several algorithms for finding \(L\) and \(U\). Although not necessari
 \item \(M\) is row-reduced to echelon form \(U\) by a sequence of row-replacement operations (if possible).
 \item Then, the same sequence of row-replacement operations reduces \(L\) to \(I\) (the identity matrix).
 \end{enumerate}
-\newpage
-\noindent Having found \(L\) and \(U\), the next steps are as follows:
+Having found \(L\) and \(U\), the next steps are as follows:
 \begin{enumerate}
 \item \(\vb{y}\) may be found by solving \(L\vb{y}=\vb{u}\), which is very simplified by the fact that \(L\) is unit lower triangular: Starting from the upper row, each element below the current diagonal entry is directly removed by simple row-operations.
 \item Finally, the solution \(\vb{v}\) is found by solving \(U\vb{v}=\vb{y}\). The entries in \(\vb{v}\) may computed sequentially by a backward substitution, starting from the lowest row.
 \end{enumerate}
-The benefits of LU-Decompositioning really arises when solving several matrix equations on the form \(M\vb{v}=\vb{d}\), where \(\vb{d}\) may differ with each equation. Nontheless, the process is fairly quick in on itself: as opposed to Gaussian elimination's \(\order{n^3}\) FLOPS, LU-Decompositioning requires \(\order{2n^2}\) FLOPS (this includes both the LU-fatorisation and the solving of equations \eqref{eq:LU_decomposed_equations}).
+The benefits of LU decompositioning really arises when solving several matrix equations on the form \(M\vb{v}=\vb{d}\), where \(\vb{d}\) may differ with each equation. Nontheless, the process is fairly quick in on itself: as opposed to Gaussian elimination's \(\order{n^3}\) FLOPS, LU decompositioning requires \(\order{2n^2}\) FLOPS (this includes both the LU fatorisation and the solving of equations \eqref{eq:LU_decomposed_equations}).
+\newpage
 \subsubsection{A generalised tridiagonal matrix equation algorithm}\label{sec:general_tridiagonal_algorithm}
 The next matrix algorithm solves a tridiagonal matrix equation with arbitrary diagonal entries. The algorithm presented here is often known as the Thomas algorithm and is in principle just Gaussian elimination, however specialised for tridiagonal matrices.
 
@@ -223,8 +227,7 @@ The first step is to perform a so-called ``forward sweep" in which the lower dia
 	\item The current equation is renormalised so that \(m_{ii}=1\).
 \end{enumerate}
 \end{enumerate}
-\newpage
-\noindent Having completed the forward sweep, the matrix equation now reads
+Having completed the forward sweep, the matrix equation now reads
 \[\mqty[1 & \tilde{c}_1 & 0 & \cdots & \cdots & 0 \\
 0 & 1 & \tilde{c}_2 & 0 & \cdots & \vdots \\
 0 & 0 & 1 & \tilde{c}_3 & \cdots & \vdots \\
@@ -236,6 +239,7 @@ where
 \tilde{c}_i&=\frac{c_i}{b_i-a_i\tilde{c}_{i-1}}\qq{with}\tilde{c}_1=\frac{c_1}{b_1}\\
 \tilde{u}_i&=\frac{u_i-a_i\tilde{u}_{i-1}}{b_i-a_i\tilde{c}_{i-1}}\qq{with}\tilde{u}_1=\frac{u_1}{b_1}
 \end{align}
+\newpage\noindent
 A forward sweep thus consists of computing:
 \begin{itemize}
 \renewcommand\labelitemi{\(\times\)}
@@ -310,7 +314,6 @@ Before even having started on the forward sweep, the tridiagonal matrix equation
 \vdots & 0 & 1 & \ddots & \ddots & 0 \\
 \vdots & \vdots & \vdots & \ddots & \rho_2 & \rho_3 \\
 0 & \cdots & \cdots & 0 & 1 & \rho_2]\mqty[v_1 \\ v_2 \\ \vdots \\ v_{n-1} \\ v_n]=\mqty[u'_1 \\ u'_2 \\ \vdots \\ u'_{n-1} \\ u'_n]\]
-\newpage
 The next step is to perform a simpler, although conceptually identical, forward sweep:
 \begin{enumerate}
 \item[] For each equation from \(i=2\) to \(i=n\):
@@ -354,7 +357,6 @@ The backward substitution in the specialised algorithm is identical to the backw
 \text{FLOPS}_{\text{special}}=7n-4
 \end{equation}
 This suggests that the specialised algorithm is about \(8/7\approx1.14\) times faster than the generalised algorithm.
-\newpage
 \subsubsection{A taylored matrix equation algorithm}
 The fourth and final algorithm presented here is an algorithm taylored to the actual problem at hand, namely equation \eqref{eq:matrix_equation_to_solve}. The notation used here will match the original notation used in section \ref{sec:discretise_diffeq}, note in particular:
 \[M=D\qc\vb{v}=\vb{y}\qand\vb{u}=h^2\vb{f}\]
@@ -373,8 +375,7 @@ which in matrix form is:
 \vdots & 0 & 1 & \ddots & \ddots & 0 \\
 \vdots & \vdots & \vdots & \ddots & -2 & 1 \\
 0 & \cdots & \cdots & 0 & 1 & -2]\mqty[\tilde{y}_1 \\ \tilde{y}_2 \\ \vdots \\ \tilde{y}_{n-1} \\ \tilde{y}_n]=\mqty[-\frac{1}{2}f_1 \\ f_2 \\ \vdots \\ f_{n-1} \\ f_n]\]
-
-%By performing a forward sweep in the same manner as presented in the specialised matrix equation algorithm, the resulting matrix equation is
+By performing a forward sweep in the same manner as presented in the specialised matrix equation algorithm, the resulting matrix equation is
 \[\mqty[1 & -\frac{1}{2} & 0 & \cdots & \cdots & 0 \\
 0 & 1 & \tilde{c}_2 & 0 & \cdots & \vdots \\
 0 & 0 & 1 & \tilde{c}_2 & \cdots & \vdots \\
@@ -391,7 +392,7 @@ The relationship between \(\tilde{c}_i\) and \(\tilde{f}_i\) is immediately noti
 \tilde{f}_i=(f_i-\tilde{f}_{i-1})\tilde{c}_i=(\tilde{f}_{i-1}-f_i)(-\tilde{c}_i)
 \end{equation}
 (The reasoning behind the second equality will become apparent in due time.)
-\newpage
+
 The next step is to explore \(\tilde{c}_i\) a little more in detail. For starters, it may be written as
 \begin{equation}\label{eq:tilde_c_requirement}
 \tilde{c}_i=\frac{-1}{2+\tilde{c}_{i-1}}\qq{with}\tilde{c}_1=-\frac{1}{2}
@@ -420,7 +421,6 @@ The number of FLOPS required for the taylored substitution is the same as in pre
 \text{FLOPS}_{\text{taylored}}=6n-1
 \end{equation}
 This suggests that the taylored algorithm is about \(8/6\approx1.34\) times faster than the generalised algorithm, and about \(7/6\approx1.17\) times faster than the specialised algorithm. It is likely that the actual efficiency of the taylored algorithm is even greater than this due to its ability to vectorise some of its calculations (in particular \((-\tilde{c}_i)\)). Among the algorithms presented in this report, the ability to vectorise some computations is unique to the taylored approach, and often may improve the accuracy significantly.
-\newpage
 \subsection{Comparing The Numerical Solutions}
 \subsubsection{Accuracy}
 Seeing that the differential equation (eq.\eqref{eq:specific_differential_equation}) was solved analytically in section \ref{sec:specific_case}, this provides an excellent opportunity to compare the numerical solutions to the exact solution.
@@ -434,65 +434,165 @@ The relative error is highly dependent on the value of \(n\), often changing by 
 \varepsilon_i=\log(|\epsilon_i|)=\log\bigg[\left|\frac{y(x_i)-y_i}{y_i}\right|\bigg]
 \end{equation}
 (Here, it is implied that the logarithm is with respect to base 10.)
+\newpage
 The greater number of FLOPS an algorithm requires, the more prone the algorithm is to accumulated errors from floating point arithmetic. This error is also contained in \(\epsilon_i\), thus the various algorithms may achieve different relative errors depending on the number of grid points.
 \subsubsection{Efficiency}
 As already mentioned, the different algorithms require different number of FLOPS, thus performing with different efficiencies. Measuring the efficiency of an algorithm is easily done using the computer's CPU time. However, the uncertainty in this calculation depends on the CPU time granularity, and the precision of the time ticks. The granularity is easily found, but the precision of the ticks is difficult to handle. Thus, the uncertainty should be considered as an estimate of the standard deviation as opposed to a strict uncertainty.
-\clearpage
 \section{Results}
-\subsection{The generalised algorithm}
-Figures \ref{fig:gen_alg_n10}, \ref{fig:gen_alg_n100} and \ref{fig:gen_alg_n1000} show plots of the numerical solutions provided by the generalised algorithm with \(n=10\), 100 and 1000 grid points respectively. It is immediately obvious that this algorithm quickly approaches the exact solution: already with \(n=100\), the difference is minimal. Furthermore, table \ref{tab:time_gen_alg_n10} shows the average time spent during calculation. The impact from increasing \(n\) from 10 to 100 is actually much less (in proportion) to increasing \(n\) from 10 to 100. That is, there seems to be a non-linear relationship between \(n\) and time spent.
-\begin{figure}[h]
+\noindent All programs may be found in the GitHub repository.
+
+The numerical solutions have been computed using \texttt{solve\_equation.x}, which was compiled using the following commands on a laptop running the Ubuntu 16.04.5 LST distribution:
+\begin{lstlisting}
+[terminal]$ g++ -std=c++14 -o solve_equation.x solve_equation.cpp
+tridiagmateq.cpp -l armadillo -O3
+\end{lstlisting}
+Plots generated using \texttt{plot\_errors.py} (which is written using Python 3 syntax).
+\subsection{An overview}
+\subsubsection{The generalised algorithm}
+Figures \ref{fig:gen_alg_n10}, \ref{fig:gen_alg_n100} and \ref{fig:gen_alg_n1000} show plots of the numerical solutions provided by the generalised algorithm with \(n=10\), 100 and 1000 grid points respectively. The exact solution have been added to the plots for ease of comparing the accuracy of the computations. It is immediately obvious that this algorithm quickly approaches the exact solution rather quickly: the difference between the exact and numerial solution is minimal with only \(n=100\) grid points.
+
+Furthermore, table \ref{tab:time_gen_alg} shows the average time spent during calculation. The impact from increasing \(n\) from 10 to 100 is actually much less (in proportion) to increasing \(n\) from 10 to 100. That is, there seems to be a non-linear relationship between \(n\) and time spent.
+\subsubsection{The specialised and taylored algorithms in comparison to the generalised algorithm}
+Figures \ref{fig:spe_alg_n1000} and \ref{fig:tay_alg_n1000} show plots of the numerical solutions provided by the specialised and taylored algorithms respectively. The solutions both used \(n=1000\) grid points in order to be compared to figure \ref{fig:gen_alg_n1000}. Again, the exact solution has been added to the plots for ease of comparing the accuracy of the computations. As expected, seeing that these algorithms are based on the generalised algorithm, these figures are, for all intents and purposes, completely identical to figure \ref{fig:gen_alg_n1000}.
+
+The difference between the two algorithms lies in the time spent computing the solutions. Table \ref{tab:time_spe_tay_alg} shows the average time spent computing the numerical solutions using the specialised and taylored algorithms: Surprisingly, the taylored algorithm spent more time compared to the specialised algorithm. This is unexpected as the taylored algorithm requires less flops than the specialised algorithm. Nonetheless, both the specialised and taylored algorithms spent less time than the generalised algorithm.
+
+\subsubsection{Testing the specialised and taylored algorithms for greater \(n\)}
+Table \ref{tab:time_spe_tay_alg2} shows how the time spent during a computation of the numerical solution evolves with increasing \(n\) for both the specialised and the taylored algorithm. There is a clear trend in the data: while the taylored algorithm is initially slower than the specialised algorithm, the rate at which the algorithms get progressively slower with increasing \(n\) is greater for the specialised algorithm than for the taylored algorithm. This is likely due to the vectorisation capabilities of the taylored algorithm. Thus with respect to computation time, choosing the most advantageous algorithm is dependent on your chosen \(n\).
+
+\begin{figure}[ht]
+\centering
 \includegraphics[scale=0.28]{figures/general_10_funcplot.png}
-\caption{A plot of the numerical solution on top of the exact solution. Numerical solution calculated using the generalised algorithm with \(n=10\).}\label{fig:gen_alg_n10}
+\caption{A plot of the numerical solution on top of the exact solution. The numerical solution was computed using the generalised algorithm with \(n=10\).}\label{fig:gen_alg_n10}
 \end{figure}
-\begin{figure}[h]
-\includegraphics[scale=0.28]{figures/general_100_funcplot.png}
-\caption{A plot of the numerical solution on top of the exact solution. Numerical solution calculated using the generalised algorithm with \(n=100\).}\label{fig:gen_alg_n100}
+\newpage
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.274]{figures/general_100_funcplot.png}
+\caption{A plot of the numerical solution on top of the exact solution. The numerical solution was computed using the generalised algorithm with \(n=100\).}\label{fig:gen_alg_n100}
 \end{figure}
-\begin{figure}[h]
-\includegraphics[scale=0.28]{figures/general_1000_funcplot.png}
-\caption{A plot of the numerical solution on top of the exact solution. Numerical solution calculated using the generalised algorithm with \(n=1000\).}\label{fig:gen_alg_n1000}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.274]{figures/general_1000_funcplot.png}
+\caption{A plot of the numerical solution on top of the exact solution. The numerical solution was computed using the generalised algorithm with \(n=1000\).}\label{fig:gen_alg_n1000}
 \end{figure}
-\begin{table}[h]
-\caption{Average time spent by the generalised algorithm during a calculation.}\label{tab:time_gen_alg_n10}
-\begin{tabular}{|c|c|}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.274]{figures/special_1000_funcplot.png}
+\caption{A plot of the numerical solution on top of the exact solution. The numerical solution was computed using the specialised algorithm with \(n=1000\).}\label{fig:spe_alg_n1000}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.274]{figures/taylored_1000_funcplot.png}
+\caption{A plot of the numerical solution on top of the exact solution. The numerical solution was computed using the taylored algorithm with \(n=1000\).}\label{fig:tay_alg_n1000}
+\end{figure}
+
+\begin{table}[h!]
+\caption{Average time spent by the generalised algorithm during aomputation of the numerical solution.}\label{tab:time_gen_alg}
+\begin{tabular}{|r|c|}
 \hline
-\(n\) & time spent \\\hline
+\multicolumn{1}{|c|}{\(n\)} & time spent \\\hline
   10  & 0.010 ms \\\hline
  100  & 0.019 ms \\\hline
 1000  & 0.126 ms \\\hline
 \end{tabular}
 \end{table}
-\subsection{The specialised and taylored algorithms}
 
+\begin{table}[h!]
+\caption{Average time spent by the specialised and taylored algorithms during a computation of the numerical solution using \(n=1000\) grid points.}\label{tab:time_spe_tay_alg}
+\begin{tabular}{|c|c|}
+\hline
+algorithm & time spent \\\hline
+specialised & 0.097 ms \\\hline
+taylored    & 0.158 ms \\\hline
+\end{tabular}
+\end{table}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+\begin{table}[h!]
+\caption{Average time spent by the specialised and taylored algorithms during a computation of the numerical solution using \(n=10^4\), \(10^5\), \(10^6\) and \(10^7\)  grid points.}\label{tab:time_spe_tay_alg2}
+\begin{tabular}{|c|r|r|}
+\hline
+algorithm   & \multicolumn{1}{c|}{\(n\)} & \multicolumn{1}{c|}{time spent} \\\hline
+specialised &      10\ 000  &   1.012 ms   \\\hline
+specialised &     100\ 000  &   8.677 ms   \\\hline
+specialised &  1\ 000\ 000  & 122.440 ms   \\\hline
+specialised & 10\ 000\ 000  & 278.338 ms   \\\hline
+taylored    &      10\ 000  &   1.139 ms   \\\hline
+taylored    &     100\ 000  &  14.516 ms   \\\hline
+taylored    &  1\ 000\ 000  &  97.157 ms   \\\hline
+taylored    & 10\ 000\ 000  & 201.197 ms   \\\hline
+\end{tabular}
+\end{table}
 
 \clearpage
+\onecolumngrid
+
+\begin{figure}[ht]
+\centering
+\includegraphics[scale=0.42]{figures/taylored_1000_error.png}
+\caption{A plot of the relative error and logarithmic relative error in the numerical solution as function of \(x_i\). The numerical solution was computed using the taylored algorithm with \(n=1000\).}\label{fig:tay_alg_error_n1000}
+\end{figure}
+\twocolumngrid
+\subsection{Relative error}
+Figure \ref{fig:tay_alg_error_n1000} below shows the relative error in the numerical solution \(\epsilon_i\) as a function of \(x_i\) when it is computed using the taylored algorithm with \(n=1000\) grid points. There is no clear relationship between the \(\epsilon_i\) and \(x_i\), although the error seems to be somewhat-normally distributed about \(\expval{\epsilon}\approx8.3166\cdot10^{-6}\). Plots of the relative errors from the other numerical solutions are more or less identical and have therefore been left out.
+
+Below in figures \ref{fig:spe_alg_maxerror} and \ref{fig:tay_alg_maxerror}, the maximum logarithmic relative errors \(\varepsilon=\log(\max(\epsilon_i))\) in the specialised and taylored numerical solutions have been plotted with respect to \(\log(h)\). Both algorithms show a linear relationship between \(\varepsilon\) and \(\log(h)\) for \(\log(h)\) values greater than -5. However, while the specialised algorithm is destabilised as \(\log(h)\) decreases, the taylored algorithm remains stabilised. The behaviour of \(\varepsilon\) for the specialised algorithm becomes unpredictable for \(\log(h)<-5\) whereas the behaviour of \(\varepsilon\) for the taylored algorithm is somewhat predictable.
+\newpage
+\subsection{LU decomposition using \texttt{armadillo}}
+The LU decomposition process provided excellent results, however spent much more time than the other algorithms. What's more, whereas the other algorithms only needed to store \(1\times n\) dimensional arrays, LU decompositioning needs to store \(n\times n\) matrices. This process thus demands considerably more memory than the other algorithms. So much so in fact that the computer performing the computations ran out of memory when trying to decompose an \(10^5\times10^5\) matrix.
+
+Table \ref{tab:time_LU_alg} shows the average time spent by the LU decomposition algorithm when computing the numerical solution. Overall the algorithm is very slow compared to the other algorithms, in particular, the \(n=10000\) computation is a ridiculous \(\approx2\cdot10^5\) times slower than the specialised and taylored algorithms. Hence, not only is the LU decomposition algorithm memory-inefficient, it also performs with extraordinarily terrible efficiency when compared to the other algorithms.
+
+It should be noted that the numbers presented here reflect the algorithm's performance with respect to a single matrix equation. It is well-established that one of the strongest benefits of LU decomposition is its ability to study several right-hand-sides of a matrix equation in succession. This was not done in this numerical experiment.
+\newpage
+\begin{table}[ht]
+\caption{Average time spent by the LU decomposition algorithms during a computation of the numerical solution.}\label{tab:time_LU_alg}
+\begin{tabular}{|r|r|}
+\hline
+\multicolumn{1}{|c|}{\(n\)} & \multicolumn{1}{c|}{time spent} \\\hline
+   10 &      0.722 ms \\\hline
+  100 &     10.750 ms \\\hline
+ 1000 &    575.917 ms \\\hline
+10000 & 217058.608 ms \\\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.34]{figures/special_maxerror.png}
+\caption{A plot of the maximim logarithmic relative error in the numerical solution as function of \(\log(h)\). The numerical solution was computed using the special algorithm.}\label{fig:spe_alg_maxerror}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.34]{figures/taylored_maxerror.png}
+\caption{A plot of the maximim logarithmic relative error in the numerical solution as function of \(\log(h)\). The numerical solution was computed using the taylored algorithm.}\label{fig:tay_alg_maxerror}
+\end{figure}
+\newpage
+
 \section{Discussion}
+Not surprisingly, the algorithms designed to make fewer computations generally performed better than the more general algorithms.
+
+The most comprehensive algorithm, the LU decomposition, is (ideally) capable of handling any matrix equation and therefore suffers the consequences of memory-heavy and inefficiency. The generalised algorithm is massively more efficient than the LU decomposition, it is however only capable of handling tridiagonal matrix equations. While seemingly a limitation, tridiagonal matrix equations are very common in applied linear algebra. Hence, an algorithm that is much more efficient than the LU decompositino is a nice addition to the numerical toolbox of any physicist.
+
+The specialised algorithm is further simplification that improves on the efficiency of the generalised algorithm. As it is not uncommon for tridiagonal matrices to have constant diagonal entries, this algorithm is also a welcome addition to the numerical toolbox.
+
+The final taylored algorithm actually did not improve on the efficiency of the specialised algorithm to any large extent. The specialised algorithm did grow slower than the taylored algorithm for large \(n\) (the specialised algorithm is about \(\approx1.38\) times slower when \(n=10^7\)), but employing the taylored algorithm really does not have any meaningful effect other than in computations with \(n>10^7\) or successive computations with \(n\gtrsim10^5\).
+
+Furthermore, figures \ref{fig:spe_alg_maxerror} and \ref{fig:tay_alg_maxerror} show that the specialised algorithm performed unpredictably for very large \(n\), while the taylored algorithm performed with unchanging accuracy. It may therefore seem benefitial to select the taylored algorithm over the specialised algorithm for very large \(n\), however increasing \(n\) essenetially only leads to less efficiency with no added accuracy (see region \(\log(h)<-5\) in figure \ref{fig:tay_alg_maxerror}). Seeing that table \ref{tab:time_spe_tay_alg2} suggests that the specialised algorithm performed faster than the taylored algorithm when \(n=10^5\) (i.e., when \(\log(h)\cong-5\)), there is no substantial benefit in choosing the taylored algorithm over the specialised algorithm.
+\clearpage
+
 \section{Conclusion}
-%\cite{dirac}\cite{einstein}
-%\bibliographystyle{plain}
-%\bibliography{references}
-	 
+In conclusion, the algorithms all provided accurate results given a descent number of grid points \(n\). The generality of the LU decomposition makes it memory-inefficient and slow when dealing with large matrices. The preferred choice when dealing with tridiagonal matrix equations is therefore either the generalised or the specialised algorithm depending on the matrix in question. Improving the specialised algorithm to a taylored algorithm when solving the specific matrix equation introduced in section \ref{sec:discretise_diffeq} is inadvisable as it does not lead to any meaningful benefit.
 
+The specialised algorithm performed optimally with a step length of about \(10^{-5}\) (i.e., approximately \(10^5\) grid points), decreasing the step length further leads to unpredictable behaviour that may be difficult to handle.
 
-
-
-
-
+To solve the specific problem at hand (equation \eqref{eq:matrix_equation_to_solve}) is satisfactorily done with a maximum relative error of about \(8.3\cdot10^{-6}\) using \(n=10^3\) grid points and any of the four algorithms.
+\nocite{lecture_ode}\nocite{lecture_linalg}
+\bibliographystyle{plain}
+\bibliography{references}
 \end{document}
