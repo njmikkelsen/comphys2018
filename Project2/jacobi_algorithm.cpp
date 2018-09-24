@@ -30,12 +30,12 @@ double ** getJacobiEigenpairs (const int n, double **A, double tol, int N_max) {
     doGivensSimTrans(n,A,V,k,l);
     a_max = getMaxOffDiag(n,A,&k,&l);
     // test whether to continue or break
-    if (i>N_max || a_max<=tol) {
+    if (i>=N_max || a_max<=tol) {
       t1 = clock();
-      cout << "Jacobi eigenpair eigenvalue completed." << endl;
-      cout << "Number of iterations = " << i << endl;
-      cout << "Max. Abs. off-diag.  = " << a_max << endl;
-      cout << "time spent = " << (double)(t1-t0)/dt << " s" << endl;
+      cout << "Jacobi eigenpair algorithm completed:" << endl;
+      cout << "  Number of iterations = " << i << endl;
+      cout << "  Max. Abs. off-diag.  = " << a_max << endl;
+      cout << "  time spent           = " << (double)(t1-t0)/dt << " s" << endl;
       break;
     };
     i++;
