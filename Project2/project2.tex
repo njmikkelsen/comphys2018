@@ -1,0 +1,233 @@
+\documentclass[reprint,english]{revtex4-1}
+
+% language
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+% standard setup
+\usepackage{physics,amssymb,array}
+\usepackage{xcolor,graphicx,hyperref}
+\usepackage{tikz,listings,multirow}
+\usepackage{subfigure}
+\usepackage{enumitem}
+
+% hyperref coloring
+\hypersetup{ %
+  colorlinks,
+  linkcolor={red!50!black},
+  citecolor={blue!50!black},
+  urlcolor={blue!80!black}}
+
+% lstlisting coloring
+\lstset{ %
+  inputpath=,
+  backgroundcolor=\color{white!88!black},
+  basicstyle={\ttfamily\scriptsize},
+  commentstyle=\color{magenta},
+  language=C++,
+  tabsize=2,
+  stringstyle=\color{green!55!black},
+  frame=single,
+  keywordstyle=\color{blue},
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true}
+
+% pretty matrix
+\newcolumntype{C}[1]{>{\centering\arraybackslash$}p{#1}<{$}}
+
+% simplify
+\newcommand{\Ham}{\hat{\mathcal{H}}}
+
+\begin{document}
+% titlepage
+\title{FYS3150 Report\\Project 2 - Solving Eigenvalue Problems}
+\author{Nils Johannes Mikkelsen}
+\date{\today}
+\noaffiliation
+\begin{abstract}
+something abstract
+\end{abstract}
+\maketitle
+
+% body
+\section*{About Project 2}
+This is a report for Project 2 in FYS3150 Computational Physics at UiO, due October \(1^{\text{st}}\), 2018. \cite{project2} The project description was accessed September\(22^{\text{nd}}\), 2018 with the following web address:\\
+{\scriptsize\url{https://github.com/CompPhysics/ComputationalPhysics/blob/master/doc/Projects/2018/Project2/pdf/Project2.pdf}}\\
+All material written for this report can be found in this GitHub repository:\\
+{\scriptsize\url{https://github.com/njmikkelsen/comphys2018/tree/master/Project2}}
+\section{Introduction}
+
+\section{Theory}
+All eigenvalue problems may be written as
+\begin{equation}
+\hat{\Lambda}f=\lambda f
+\end{equation}
+where \(f\) and \(\lambda\) is an eigenvector-eigenvalue eigenpair of the operator \(\hat{\Lambda}\). Other than requiring the existence of at least one eigenvector, the operator \(\hat{\Lambda}\) does not need to be restricted in any particular way.
+
+Instead of solving arbitrary eigenvalue problems, this report will investigate some important examples from physics. Most of the equations are already on the eigenvalue-problem format. However, further treatment will bring the equations to dimensionsless form in order to highlight their underlying similarities, especially in the context of solving them by numerical means. In the following sections, all the continuous problems will be introduced before the discretisation process.
+\subsection{Eigenvalue Problems in Physics:\\The Buckling Beam}
+A straight non-rigid beam of length \(L\) is fastened at \(x=0\) and \(x=L\). A constant uniform force \(\vb{F}=-F\vu{e}_x\) is applied to the beam at \(x=L\) such that the beam is bended in the \(\vu{e}_y\) direction with displacement \(y(x)\). Using infinitesimal analysis, one can show that the beam's bending behaves according to
+\begin{equation}\label{eq:initial_buckling_beam}
+\gamma\partial_x^2y(x)=-Fy(x)\qc x\in[0,L]
+\end{equation}
+where \(\gamma\) is a rigidity parameter and \(y(x)\) is restricted by Dirichlet boundary conditions \(y(0)=y(L)=0\).
+
+The next step is to introduce the dimensionless variables \(\xi=x/L\) and \(v(\xi)=y(L\xi)\), which by definition implies that \(\xi\in[0,1]\). The new Dirichlet boundaries become \(v(0)=v(1)=0\) and the eigenvalue equation may be written as
+\begin{equation}\label{eq:dimless_buckling_beam}
+\partial_{\xi}^2v(\xi)=\lambda v(\xi)
+\end{equation}
+Here, \(v(\xi)\) are eigenvectors with corresponding eigenvalues \(\lambda=-FL^2/\gamma\).
+\subsection{Eigenvalue Problems in Physics:\\The Radial Schrödinger Equation}\label{sec:radial_scrodinger_equation}
+Provided the spherical coordinates basis \(\{\ket{r,\theta,\varphi}\}\), the Hamiltonian for a particle of mass \(m\) in a spherically symmetric potential \(V(r)\) may be written as
+\begin{equation}\label{eq:std_hamiltonian}
+\Ham=\frac{-\hbar^2}{2m}\laplacian+V(\hat{r})
+\end{equation}
+where the laplacian is given by
+\begin{equation}\label{eq:laplacian_spherical_coordinates}
+\laplacian=r^{-1}\partial_r^2r+r^{-2}\Big(\csc\theta\partial_\theta[\sin\theta\partial_\theta]+\csc^2\theta\partial_\varphi^2\Big)
+\end{equation}
+Using the canonical operatores \(\hat{x}=x\) and \(\hat{p}=-i\hbar\nabla\), one can show that the angular momentum operator \(\vu{L}^2=\vu{L}_x^2+\vu{L}_y^2+\vu{L}_z^2\) is given by
+\[\vu{L}^2=-\hbar^2\Big(\csc\theta\partial_\theta[\sin\theta\partial_\theta]+\csc^2\theta\partial_\varphi^2\Big)\]
+which implies that the hamiltonian may be rewritten in terms of \(\vu{L}^2\):
+\begin{equation}\label{eq:hamiltonian_via_L2}
+\Ham=\frac{-\hbar^2}{2mr}\partial_r^2r+\frac{\vu{L}^2}{2mr^2}+V(\hat{r})
+\end{equation}
+All components of \(\Ham\) commutes, thus \([\Ham,\vu{L}^2]=0\). Therefore, \(\Ham\) and \(\vu{L}^2\) must share eigenstates \(\psi(r,\theta,\varphi)\). However, the eigenstates of \(\vu{L}^2\) are already known to be the spherical harmonics \(Y_\ell^m(\theta,\varphi)\), meaning that the \(r\)-dependency of \(\psi\) must be independent of \((\theta,\varphi)\). Or in other words:
+\begin{equation}\label{eq:eigenstates_hamiltonian_L2}
+\psi(r,\theta,\varphi)=\mathcal{R}(r)Y_\ell^m(\theta,\varphi)
+\end{equation}
+
+The eigenvalues of \(\vu{L}^2\) are \(\vu{L}^2Y_\ell^m(\theta,\varphi)=\hbar^2\ell(\ell+1)Y_\ell^m\). Thus, the eigenvalues of \(\Ham\) are determined by
+\begin{align}
+\Ham\psi&=E\psi\nonumber\\
+\frac{-\hbar^2}{2mr}\partial_r^2r\psi+\frac{\hbar^2\ell(\ell+1)}{2mr^2}\psi+V(r)\psi&=E\psi\nonumber\\
+\frac{-\hbar^2}{2mr}\partial_r^2r\mathcal{R}(r)+\frac{\hbar^2\ell(\ell+1)}{2mr^2}\mathcal{R}(r)+V(r)\mathcal{R}(r)&=E\mathcal{R}(r)\nonumber
+\end{align}
+i.e. the so-called Radial Schrödinger equation. The equation may be further simplified by introducing the transformation \(u(r)=r\mathcal{R}(r)\):
+\begin{equation}\label{eq:radial_schrodinger_equation_simplified}
+\frac{-\hbar^2}{2m}\partial_r^2u(r)+\Big[V(r)+\frac{\hbar^2\ell(\ell+1)}{2mr^2}\Big]u(r)=Eu(r)
+\end{equation}
+The Dirichlet boundary conditions for this equation are \(u(0)=\displaystyle\lim_{b\to\infty}u(b)=0\).
+
+Finally, one may introduce the dimensionless variables \(\xi=r/\alpha\) and \(v(\xi)=u(\alpha\xi)\), where \(\alpha\) is the system's so-called natural length scale. Note that \(\xi\in[0,\infty)\) and that the Dirichlet boundary conditions for \(v(\xi)\) are completely equivalent to those of \(u(r)\). Equation \eqref{eq:radial_schrodinger_equation_simplified} may thus, via a little algebra, be rewritten as the dimensionless eigenvalue equation:
+\begin{equation}\label{eq:dimless_radial_schrodinger}
+\Big[\partial_\xi^2-\frac{2m\alpha^2}{\hbar^2}V(\alpha\xi)-\frac{\ell(\ell+1)}{\xi^2}\Big]v(\xi)=\lambda v(\xi)
+\end{equation}
+Here, \(v(\xi)\) are eigenvectors with corresponding eigenvalues \(\lambda=-2m\alpha^2E/\hbar^2\).
+
+It is now impossible to continue the analysis without specifying the potential energy function \(V(r)\).
+\subsubsection{The harmonic oscillator potential}
+The harmonic oscillator potential is given by \(V(r)=\frac{1}{2}m\omega^2r^2\). This implies that
+\[\frac{2m\alpha^2}{\hbar^2}V(\alpha\xi)=\frac{m^2\omega^2}{\hbar^2}\alpha^4\xi^2\]
+Now if \(\alpha=i\sqrt{\hbar/m\omega}\), then equation \eqref{eq:dimless_radial_schrodinger} simplifies to
+\begin{equation}\label{eq:dimless_radial_schrodinger_harmonic_oscillator}
+\Big[\partial_\xi^2-\xi^2-\ell(\ell+1)\xi^{-2}\Big]v(\xi)=\lambda v(\xi)
+\end{equation}
+where \(\lambda=2E/\hbar\omega\).
+
+While it is possible to solve equation \eqref{eq:dimless_radial_schrodinger_harmonic_oscillator} analytically, this will not be done here. However, the resulting energy eigenvalues are given by:
+\begin{equation}\label{eq:harmonic_oscillator_energies}
+E_{nl}=\hbar\omega\bigg(2n+\ell+\frac{3}{2}\bigg)
+\end{equation}
+where \(n=0,1,\ldots\) and \(\ell=0,1,\ldots,n-1\). This implies that the analytic values for \(\lambda\) are
+\begin{equation}\label{eq:harmonic_oscillator_dimless_eigenvalues}
+\lambda_{nl}=4n+2l+3
+\end{equation}
+\subsubsection{Two Coulomb-interacting electrons in a harmonic oscillator potential}
+To extend the case of a single particle to the case of two interacting particles, the Hamiltonian must change accordingly:
+\begin{equation}\label{eq:hamiltonian_two_particles}
+\Ham=\frac{\abs{\vu{p}_1}^2}{2m_1}+\frac{\abs{\vu{p}_2}^2}{2m_2}+V(\vu{r}_1,\vu{r}_2)
+\end{equation}
+where in the case of two electrons: \(m_1=m_2=m\). If placed in a harmonic oscillator potential, and allowed to interact via a Coulomb interaction, the potential for the electron-electron system is given by
+\begin{equation}
+V(\vu{r}_1,\vu{r}_2)=V_H(\vu{r}_1)+V_H(\vu{r}_2)+V_C(\vu{r}_1-\vu{r}_2)
+\end{equation}
+where
+\[V_H(\vb{r})=\frac{1}{2}m\omega^2\abs{\vb{r}}^2\qand V_C=\frac{k}{\abs{\vb{r}}}\]
+with \(k=e^2/4\pi\varepsilon_0\). In order to simplify the calculations, the following coordinate transformation is introduced:
+\begin{equation}
+\vb{R}=\frac{1}{2}\big(\vb{r}_1+\vb{r}_2\big)\qand\vb{r}=\vb{r}_1-\vb{r}_2
+\end{equation}
+Here, \(\vb{R}\) represents the center of mass while \(\vb{r}\) represents the electrons' relative frame of reference. Following standard definitions, the momenta \(\vb{P}\) and \(\vb{p}\) corresponding to \(\vb{R}\) and \(\vb{r}\) are defined as follows:
+\begin{equation}
+\vb{P}=\vb{p}_1+\vb{p}_2\qand\vb{p}=\vb{p}_1-\vb{p}_2
+\end{equation}
+Hence, by definition:
+\begin{align*}
+4\big|\vb{R}\big|^2+\abs{\vb{r}}^2&=2\Big(\abs{\vb{r}_1}^2+\abs{\vb{r}_2}^2\Big)\\
+\big|\vb{P}\big|^2+\abs{\vb{p}}^2&=2\Big(\abs{\vb{p}_1}^2+\abs{\vb{p}_2}^2\Big)
+\end{align*}
+Using \(\vb{R}\), \(\vb{r}\), \(\vb{P}\) and \(\vb{p}\), one may rewrite the Hamiltonian:
+\begin{equation}\label{eq:hamiltonian_two_particles_new}
+\Ham=\frac{\big|\vu{P}\big|^2}{4m}+\frac{\abs{\vu{p}}^2}{4m}+m\omega^2\big|\vu{R}\big|^2+\frac{1}{4}m\omega^2|\vu{r}|^2+\frac{k}{|\vu{r}|}
+\end{equation}
+This may be further seperated into two components \(\Ham_R\) and \(\Ham_r\), which are dependent on \(\vu{R}\) and \(\vu{r}\) respectively. All components of \(\Ham\) commute, thus \(\Ham_R\) and \(\Ham_r\) must share eigenstates \(\psi\). Provided the spherical coordinate bases \(\{\ket{R,\theta_R,\varphi_R}\}\) and \(\{\ket{r,\theta_r,\varphi_r}\}\), the eigenstates may be written in terms of two separate components:
+\begin{equation}
+\psi(\vb{R},\vb{r})=\phi(\vb{R})\chi(\vb{r})
+\end{equation}
+Moreover, the eigenvalue equation \(\Ham\psi=E\psi\) may be simplified via the separation of variables technique (the details have been omitted):
+\begin{subequations}
+\begin{align}
+E_R+E_r&=E\\
+\bigg[\frac{-\hbar^2}{4m}\laplacian_R+m\omega^2R^2\bigg]\phi=\Ham_R\phi&=E_R\phi\label{eq:separated_variables_eq1}\\
+\bigg[\frac{-\hbar^2}{4m}\laplacian_r+\frac{1}{4}m\omega^2r^2+\frac{k}{r}\bigg]\chi=\Ham_r\chi&=E_r\chi\label{eq:separated_variables_eq2}
+\end{align}
+\end{subequations}
+By following the exact same approach as the one laid out earlier in this section, the operators \(\laplacian_R\) and \(\laplacian_r\) may be rewritten in terms of \(\vu{L}_R^2\) and \(\vu{L}_r^2\) respectively. It follows that \(\Ham_R\) and \(\Ham_r\) commute with \(\vu{L}_R^2\) and \(\vu{L}_r^2\) such that \(\phi\) and \(\chi\) may be written as products of a radial component and spherical harmonics respectively:
+\begin{subequations}
+\begin{align}
+\phi(R,\theta_R,\varphi_R)&=\mathcal{R}_R(R)Y(\ell_R,m_R;\theta_R,\varphi_R)\\
+\chi(r,\theta_r,\varphi_r)&=\mathcal{R}_r(r)Y(\ell_r,m_r;\theta_r,\varphi_r)
+\end{align}
+\end{subequations}
+As a result, equations \eqref{eq:separated_variables_eq1} and \eqref{eq:separated_variables_eq2} yield:
+\begin{align*}
+\bigg(\frac{-\hbar^2}{4mR}\partial_R^2R+m\omega^2R^2+\frac{\hbar^2\ell_R(\ell_R+1)}{4mR^2}\bigg)\mathcal{R}_R&=E_R\mathcal{R}_R\\
+\bigg(\frac{-\hbar^2}{4mr}\partial_r^2r+\frac{1}{4}m\omega^2r^2+\frac{\hbar^2\ell_r(\ell_r+1)}{4mr^2}+\frac{k}{r}\bigg)\mathcal{R}_r&=E_r\mathcal{R}_r
+\end{align*}
+Again, introduce transformations \(u_R(R)=R\mathcal{R}_R(R)\) and \(u_r(r)=r\mathcal{R}_r(r)\) such that
+\begin{align*}
+\bigg(\frac{-\hbar^2}{4m}\partial_R^2+m\omega^2R^2+\frac{\hbar^2\ell_R(\ell_R+1)}{4mR^2}\bigg)u_R&=E_Ru_R\\
+\bigg(\frac{-\hbar^2}{4m}\partial_r^2+\frac{1}{4}m\omega^2r^2+\frac{\hbar^2\ell_r(\ell_r+1)}{4mr^2}+\frac{k}{r}\bigg)u_r&=E_ru_r
+\end{align*}
+The \(R\)-equation is actually the same as the harmonic oscillator studied above. To realise this, one must introduce the dimensionless variables \(\xi=R/\alpha\) and \(v_R(\xi)=u_R(\alpha\xi)\), now with \(\alpha=i\sqrt{\hbar/2m\omega}\). In doing so the \(R\)-equation reduces to equation \eqref{eq:dimless_radial_schrodinger_harmonic_oscillator} with \(E_R=E\) and \(\lambda_R=2E/\hbar\omega\). This implies \(E_R\) is given by equation \eqref{eq:harmonic_oscillator_energies} and \(\lambda_R\) is given by equation \eqref{eq:harmonic_oscillator_dimless_eigenvalues}.
+
+To continue with the \(r\)-equation, dimensionless variables \(\rho=r/\beta\) and \(v_r(\rho)=u_r(\beta\rho)\) are introduced:
+\begin{align*}
+\bigg(\partial_\rho^2-\frac{m^2\omega^2}{\hbar^2}\beta^4\rho^2-\frac{\ell_r(\ell_r+1)}{\rho^2}-\frac{4mk\beta}{\hbar^2\rho}\bigg)v_r\\=-\frac{4m\beta^2}{\hbar^2}E_rv_r
+\end{align*}
+At this point, \(\beta\) may be chosen in order to scale the equation either according to the harmonic oscillator potential or the Coulomb interaction. In an experimental setting, a harmonic oscillator potential is adjustable whereas the Coulomb interaction is fixed. This implies that the Coulomb interaction serves best as the system's natural scale: \(\beta=\hbar^2/4mk\). Now let \(\omega_r^2=m^2\omega^2\beta^4/\hbar^2\) denote an adjustable dimensionless oscillatory parameter such that the final eigenvalue equation becomes
+\begin{equation}\Big(\partial_\rho^2-\omega_r^2\rho^2-\ell_r(\ell_r+1)\rho^{-2}-\rho^{-1}\Big)v_r=\lambda_rv_r
+\end{equation}
+Here, \(v_r(\rho)\) are eigenvectors with corresponding eigenvalues \(\lambda_r=-\hbar^2E_r/4mk^2\).
+
+In conclusion, the total energy of the electron-electron system therefore is
+\begin{equation}
+E=E_R+E_r=\hbar\omega\bigg(2n_R+\ell_R+\frac{3}{2}\bigg)-\frac{4mk^2}{\hbar^2}\lambda_r
+\end{equation}
+
+
+
+
+
+
+
+\clearpage
+
+\section{Method}
+
+
+\section{Results}
+
+
+\section{Discussion}
+
+
+\section{Conclusion}
+
+
+\nocite{lecture_ode}\nocite{lecture_linalg}
+\bibliographystyle{plain}
+\bibliography{references}
+\end{document}
