@@ -197,15 +197,99 @@ To continue with the \(r\)-equation, dimensionless variables \(\rho=r/\beta\) an
 \begin{align*}
 \bigg(\partial_\rho^2-\frac{m^2\omega^2}{\hbar^2}\beta^4\rho^2-\frac{\ell_r(\ell_r+1)}{\rho^2}-\frac{4mk\beta}{\hbar^2\rho}\bigg)v_r\\=-\frac{4m\beta^2}{\hbar^2}E_rv_r
 \end{align*}
-At this point, \(\beta\) may be chosen in order to scale the equation either according to the harmonic oscillator potential or the Coulomb interaction. In an experimental setting, a harmonic oscillator potential is adjustable whereas the Coulomb interaction is fixed. This implies that the Coulomb interaction serves best as the system's natural scale: \(\beta=\hbar^2/4mk\). Now let \(\omega_r^2=m^2\omega^2\beta^4/\hbar^2\) denote an adjustable dimensionless oscillatory parameter such that the final eigenvalue equation becomes
-\begin{equation}\Big(\partial_\rho^2-\omega_r^2\rho^2-\ell_r(\ell_r+1)\rho^{-2}-\rho^{-1}\Big)v_r=\lambda_rv_r
+At this point, \(\beta\) may be chosen in order to scale the equation either according to the harmonic oscillator potential or the Coulomb interaction. In an experimental setting, a harmonic oscillator potential could be adjustable whereas the Coulomb interaction is fixed. This implies that the Coulomb interaction serves best as the system's natural scale: \(\beta=\hbar^2/4mk\). Now let \(\omega_r^2=m^2\omega^2\beta^4/\hbar^2\) denote an adjustable dimensionless oscillatory parameter such that the final eigenvalue equation becomes
+\begin{equation}\label{eq:dimless_two_particle_interaction}
+\Big(\partial_\rho^2-\omega_r^2\rho^2-\ell_r(\ell_r+1)\rho^{-2}-\rho^{-1}\Big)v_r=\lambda_rv_r
 \end{equation}
 Here, \(v_r(\rho)\) are eigenvectors with corresponding eigenvalues \(\lambda_r=-\hbar^2E_r/4mk^2\).
 
-In conclusion, the total energy of the electron-electron system therefore is
+In conclusion, the total energy of the electron-electron system is given by
 \begin{equation}
 E=E_R+E_r=\hbar\omega\bigg(2n_R+\ell_R+\frac{3}{2}\bigg)-\frac{4mk^2}{\hbar^2}\lambda_r
 \end{equation}
+
+\subsection{Discretisation}
+Let \(\xi\in[a,b]\) denote an independent variable and \(v(\xi)\in\mathbb{R}\) denote a dependent variable that satisfies some eigenvalue equation \(\hat{\Lambda} v(\xi)=\lambda v(\xi)\), where the variables and the operator are continuous objects. The operator may be a linear combination of several operators \(\hat{\Lambda}=\hat{\Lambda}_1+\hat{\Lambda}_2+\cdots\). The following section is concerned with the discretisation of these variables and operators.
+\subsubsection{The variables}
+The first step is to discretise the \(\xi\)-interval \([a,b]\) into \(n+1\) slices such that \(\xi\) is replaced by a grid with \(n+2\) \(\xi_i\) values:
+\begin{equation}
+\xi_i=a+ih\qfor i=0,1,\ldots,n+1
+\end{equation}
+where
+\begin{equation}
+h=\frac{b-a}{n+1}
+\end{equation}
+(Note that \(\xi_0=a\) and \(\xi_{n+1}=b\).) Following the discretisation of \(\xi\), \(v(\xi)\) is now naturally discretised as follows:
+\begin{equation}
+v_i=v(\xi_i)\qfor i=0,1,\ldots,n+1
+\end{equation}
+Any Dirichlet boundary conditions \(v(a)=v_a\) and \(v(b)=v_b\) are then imposed by setting \(v_0=v_a\) and \(v_{n+1}=v_b\). As opposed to the continuous variable \(v(\xi)\), the simplest way to represent the discrete variable-set \(\{v_i\}_{i=0}^{i=n+1}\) is as a column vector:
+\begin{equation}
+\vb{v}=\mqty(v_0&v_1&\cdots&v_{n+1})^T
+\end{equation}
+\subsubsection{Operator: The second derivative}
+As \(\vb{v}\) is not a continous object, it is incompatible with the continous second derivative operator \(\hat{\Lambda}=\partial_\xi^2\). To work around this problem, the derivative must be approximated via some discretisation process. One such approach is the finite difference approximation, in particular the central finite difference approximation method for second order derivatives:
+
+Consider the Taylor expansion of any single-variable function \(f(y)\), centered about \(y=x\):
+\begin{align}
+f(y)&= f(x)+f'(x)(y-x)+\frac{f''(x)}{2}(y-x)^2\nonumber\\
+&\quad +\frac{f'''(x)}{6}(y-x)^3+\frac{f^{(4)}(x)}{24}(y-x)^4+\cdots\label{eq:second_order_taylor_expansion}
+\end{align}
+Now consider \(f(x\pm h)\):
+\begin{align}
+f(x\pm h)&=f(x)\pm f'(x)h+\frac{f''(x)}{2}h^2\nonumber\\
+&\quad \pm\frac{f'''(x)}{6}h^3+\frac{f^{(4)}(x)}{24}h^4+\cdots
+\end{align}
+It follows that
+\begin{align*}
+&f(x+h)+f(x-h)=2f(x)+f''(x)h^2+\order{h^4}
+\end{align*}
+where it assumed that \(h\leq1\). The central finite difference approximation for second order derivatives is now found by solving for \(f''(x)=\partial_y^2f(x)=\partial_x^2f(x)\)
+\begin{equation}\label{eq:second_order_finite_difference_approximation}
+\partial_x^2f(x)=\frac{f(x+h)-2f(x)+f(x-h)}{h^2}+\order{h^2}
+\end{equation}
+(Note that the \emph{approximation} does not include the order-of term.) It is worth noting that equation \eqref{eq:second_order_finite_difference_approximation} is exact in the limit \(h\to0\):
+\begin{align*}
+\lim_{h\to0}\frac{f(x+h)-2f(x)+f(x-h)}{h^2}+\order{h^2}&=\\[2mm]
+\lim_{h\to0}\frac{\frac{f(x+h)-f(x)}{h}-\frac{f(x)-f(x-h)}{h}}{h}+\order{h^2}&=\\[2mm]
+\lim_{h\to0}\frac{f'(x+h)-f'(x)}{h}+\order{h^2}&=f''(x)
+\end{align*}
+The idea of equation \eqref{eq:second_order_finite_difference_approximation} is to approximate \(v''(\xi_i)\) for each \(i=1,\ldots,n\):
+\begin{align*}
+v''(\xi_1)&\approx h^{-2}\big(v_0-2v_1+v_2\big)\\
+v''(\xi_2)&\approx h^{-2}\big(v_1-2v_2+v_3\big)\\
+&\qquad\vdots\qquad\vdots\qquad\\
+v''(\xi_n)&\approx h^{-2}\big(v_{n-1}-2v_n+v_{n+1}\big)
+\end{align*}
+Note that \(v''(\xi_0)\) and \(v''(\xi_{n+1})\) cannot be approximated as \(v_{-1}\) and \(v_{n+2}\) are unknown. The above equations may be written as a matrix equation if the second derivatives are denoted as the column vector \(\vb{v}''=\mqty(v''(\xi_1)&\cdots&v''(\xi_n))^T\):
+\begin{align*}
+\mqty(v''(\xi_1)\\\vdots\\v''(\xi_n)) &= h^{-2}
+\mqty(1      & -2      & 1       & 0      & \cdots &  0       & 0        & 0      \\
+      0      &  1      & -2      & 1      & \cdots &  \vdots  & \vdots   & \vdots \\
+      0      &  0      & 1       & \ddots & \ddots &  \vdots  & \vdots   & \vdots \\
+      \vdots &  \vdots & \vdots  & \ddots & \ddots &  1       &  0       & 0      \\
+      \vdots &  \vdots & \vdots  & \cdots & 1      & -2       &  1       & 0      \\
+      0      &  0      & 0       & \cdots & 0      & 1        &  -2      & 1       )
+\mqty(v_0\\v_1\\\vdots\\v_n\\v_{n+1})
+\end{align*}
+Or simply
+\begin{equation}\label{eq:discretised_second_derivative}
+\vb{v}''=\hat{\Lambda}_D\vb{v}
+\end{equation}
+where \(\hat{\Lambda}\) is the giant matrix, including the factor \(h^{-2}\). Note that while \(\vb{v}\) contains \(n+2\) points, \(\vb{v}''\) only contains \(n\) points. This is also evident from the fact that \(\hat{\Lambda}_D\) is an \(n\times(n+2)\) matrix. \footnote{The fact that \(\hat{\Lambda}_D\) is an \(n\times(n+2)\) matrix implies that it accepts an \((n+2)\)-dimensional column vector and returns an \(n\)-dimensional column vector.} Furthermore, equation \eqref{eq:discretised_second_derivative} is the discrete equivalent to the continous equation:
+\[\partial_\xi^2v(\xi)=v''(\xi)\]
+\subsubsection{Operator: Multiplication with another function}
+A "multiplication-with-another-function operator" may be written as \(\hat{\Lambda}=g(\xi)\). Compared to the second derivative operator, these operators are much more simple to account for as they do not act on the eigenvector itself. The discretisation of these operators is simply given by \(\hat{\Lambda}_g=\text{diag}\mqty(g(\xi_0)\cdots g(\xi_{n+1})))\), which yields:
+\begin{equation}
+\hat{\Lambda}_g\vb{v}=\mqty(g(\xi_0)v_0\\g(\xi_1)v_1\\\vdots\\g(\xi_{n+1})v_{n+1})
+\end{equation}
+
+A common example of these kind of operators are polynomials: \(g(\xi)=\xi^2\), \(g(\xi)=\xi^{-2}\), etc.
+
+\section{Method}
+
+
+
 
 
 
@@ -214,9 +298,6 @@ E=E_R+E_r=\hbar\omega\bigg(2n_R+\ell_R+\frac{3}{2}\bigg)-\frac{4mk^2}{\hbar^2}\l
 
 
 \clearpage
-
-\section{Method}
-
 
 \section{Results}
 
