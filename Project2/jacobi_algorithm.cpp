@@ -4,7 +4,7 @@
 double ** getJacobiEigenpairs (const int n, double **A, double tol, int N_max) {
   /*
   Diagonalize and extract the eigenpairs of a real symmetric matrix via the Jacobi
-  eigenpair algorithm.
+  eigenpair/diagoanlisation algorithm.
   
   Arguments:
     n     | matrix dimensionality

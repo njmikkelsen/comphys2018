@@ -86,6 +86,21 @@ double ** init_identity_matrix (const int m, const int n) {
 };
 double ** init_identity_matrix (const int n) {return init_identity_matrix(n,n);};
 
+// initialize a tridiagonal Toeplitz matrix
+double ** init_tridiag_Toeplitz_matrix(const int m, const int n, double a, double b, double c) {
+  int i,j;
+  double **M = init_matrix(m,n);
+  M[0][0] = b;
+  for (i=1; i<n; i++) {
+    M[i][i-1] = a;
+    M[i][i]   = b;
+    M[i-1][i] = c;
+  }
+  return M;
+};
+ double ** init_tridiag_Toeplitz_matrix(const int n, double a, double b, double c) {
+  return  init_tridiag_Toeplitz_matrix(n,n,a,b,c);}
+
 // free-up space by deleting a matrix
 void delete_matrix (const int n, double ** M) {
   int i;

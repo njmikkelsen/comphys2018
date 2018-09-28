@@ -75,9 +75,11 @@ where \(\gamma\) is a rigidity parameter and \(y(x)\) is restricted by Dirichlet
 
 The next step is to introduce the dimensionless variables \(\xi=x/L\) and \(v(\xi)=y(L\xi)\), which by definition implies that \(\xi\in[0,1]\). The new Dirichlet boundaries become \(v(0)=v(1)=0\) and the eigenvalue equation may be written as
 \begin{equation}\label{eq:dimless_buckling_beam}
-\partial_{\xi}^2v(\xi)=\lambda v(\xi)
+\partial_{\xi}^2v(\xi)=-\lambda v(\xi)
 \end{equation}
-Here, \(v(\xi)\) are eigenvectors with corresponding eigenvalues \(\lambda=-FL^2/\gamma\).
+Here, \(v(\xi)\) are eigenvectors with corresponding eigenvalues \(-\lambda=FL^2/\gamma\).
+
+By inspecting \eqref{eq:dimless_buckling_beam} it is easy to see that the eigenvectors must be on the form \(v(\xi)=A\sin(B\xi+C)\). It follows from \(\partial_\xi^2v(\xi)=-B^2 v(\xi)\) that \(\lambda=B^2\). Furthermore, by imposing \(v(0)=0\) (while assuming \(A\neq0\)) one finds \(C=0\) such that \(v(1)=0=A\sin(\sqrt{\lambda})\), which implies that \(\lambda=n^2\pi^2\) for all integer \(n\).
 \subsection{Eigenvalue Problems in Physics:\\The Radial Schrödinger Equation}\label{sec:radial_scrodinger_equation}
 Provided the spherical coordinates basis \(\{\ket{r,\theta,\varphi}\}\), the Hamiltonian for a particle of mass \(m\) in a spherically symmetric potential \(V(r)\) may be written as
 \begin{equation}\label{eq:std_hamiltonian}
@@ -112,9 +114,9 @@ The Dirichlet boundary conditions for this equation are \(u(0)=\displaystyle\lim
 
 Finally, one may introduce the dimensionless variables \(\xi=r/\alpha\) and \(v(\xi)=u(\alpha\xi)\), where \(\alpha\) is the system's so-called natural length scale. Note that \(\xi\in[0,\infty)\) and that the Dirichlet boundary conditions for \(v(\xi)\) are completely equivalent to those of \(u(r)\). Equation \eqref{eq:radial_schrodinger_equation_simplified} may thus, via a little algebra, be rewritten as the dimensionless eigenvalue equation:
 \begin{equation}\label{eq:dimless_radial_schrodinger}
-\Big[\partial_\xi^2-\frac{2m\alpha^2}{\hbar^2}V(\alpha\xi)-\frac{\ell(\ell+1)}{\xi^2}\Big]v(\xi)=\lambda v(\xi)
+\Big[\partial_\xi^2-\frac{2m\alpha^2}{\hbar^2}V(\alpha\xi)-\frac{\ell(\ell+1)}{\xi^2}\Big]v(\xi)=-\lambda v(\xi)
 \end{equation}
-Here, \(v(\xi)\) are eigenvectors with corresponding eigenvalues \(\lambda=-2m\alpha^2E/\hbar^2\).
+Here, \(v(\xi)\) are eigenvectors with corresponding eigenvalues \(-\lambda=2m\alpha^2E/\hbar^2\).
 
 It is now impossible to continue the analysis without specifying the potential energy function \(V(r)\).
 \subsubsection{The harmonic oscillator potential}
@@ -122,9 +124,9 @@ The harmonic oscillator potential is given by \(V(r)=\frac{1}{2}m\omega^2r^2\). 
 \[\frac{2m\alpha^2}{\hbar^2}V(\alpha\xi)=\frac{m^2\omega^2}{\hbar^2}\alpha^4\xi^2\]
 Now if \(\alpha=i\sqrt{\hbar/m\omega}\), then equation \eqref{eq:dimless_radial_schrodinger} simplifies to
 \begin{equation}\label{eq:dimless_radial_schrodinger_harmonic_oscillator}
-\Big[\partial_\xi^2-\xi^2-\ell(\ell+1)\xi^{-2}\Big]v(\xi)=\lambda v(\xi)
+\Big[\partial_\xi^2-\xi^2-\ell(\ell+1)\xi^{-2}\Big]v(\xi)=-\lambda v(\xi)
 \end{equation}
-where \(\lambda=2E/\hbar\omega\).
+where \(-\lambda=2E/\hbar\omega\).
 
 While it is possible to solve equation \eqref{eq:dimless_radial_schrodinger_harmonic_oscillator} analytically, this will not be done here. However, the resulting energy eigenvalues are given by:
 \begin{equation}\label{eq:harmonic_oscillator_energies}
@@ -199,16 +201,16 @@ To continue with the \(r\)-equation, dimensionless variables \(\rho=r/\beta\) an
 \end{align*}
 At this point, \(\beta\) may be chosen in order to scale the equation either according to the harmonic oscillator potential or the Coulomb interaction. In an experimental setting, a harmonic oscillator potential could be adjustable whereas the Coulomb interaction is fixed. This implies that the Coulomb interaction serves best as the system's natural scale: \(\beta=\hbar^2/4mk\). Now let \(\omega_r^2=m^2\omega^2\beta^4/\hbar^2\) denote an adjustable dimensionless oscillatory parameter such that the final eigenvalue equation becomes
 \begin{equation}\label{eq:dimless_two_particle_interaction}
-\Big(\partial_\rho^2-\omega_r^2\rho^2-\ell_r(\ell_r+1)\rho^{-2}-\rho^{-1}\Big)v_r=\lambda_rv_r
+\Big(\partial_\rho^2-\omega_r^2\rho^2-\ell_r(\ell_r+1)\rho^{-2}-\rho^{-1}\Big)v_r=-\lambda_rv_r
 \end{equation}
-Here, \(v_r(\rho)\) are eigenvectors with corresponding eigenvalues \(\lambda_r=-\hbar^2E_r/4mk^2\).
+Here, \(v_r(\rho)\) are eigenvectors with corresponding eigenvalues \(-\lambda_r=\hbar^2E_r/4mk^2\).
 
 In conclusion, the total energy of the electron-electron system is given by
 \begin{equation}
 E=E_R+E_r=\hbar\omega\bigg(2n_R+\ell_R+\frac{3}{2}\bigg)-\frac{4mk^2}{\hbar^2}\lambda_r
 \end{equation}
 
-\subsection{Discretisation}
+\subsection{Discretisation}\label{sec:discretisation}
 Let \(\xi\in[a,b]\) denote an independent variable and \(v(\xi)\in\mathbb{R}\) denote a dependent variable that satisfies some eigenvalue equation \(\hat{\Lambda} v(\xi)=\lambda v(\xi)\), where the variables and the operator are continuous objects. The operator may be a linear combination of several operators \(\hat{\Lambda}=\hat{\Lambda}_1+\hat{\Lambda}_2+\cdots\). The following section is concerned with the discretisation of these variables and operators.
 \subsubsection{The variables}
 The first step is to discretise the \(\xi\)-interval \([a,b]\) into \(n+1\) slices such that \(\xi\) is replaced by a grid with \(n+2\) \(\xi_i\) values:
@@ -244,7 +246,7 @@ It follows that
 \begin{align*}
 &f(x+h)+f(x-h)=2f(x)+f''(x)h^2+\order{h^4}
 \end{align*}
-where it assumed that \(h\leq1\). The central finite difference approximation for second order derivatives is now found by solving for \(f''(x)=\partial_y^2f(x)=\partial_x^2f(x)\)
+where it assumed that \(h\leq1\). The central finite difference approximation for second order derivatives is now found by solving for \(f''(x)=\partial_y^2f(x)=\partial_x^2f(x)\):
 \begin{equation}\label{eq:second_order_finite_difference_approximation}
 \partial_x^2f(x)=\frac{f(x+h)-2f(x)+f(x-h)}{h^2}+\order{h^2}
 \end{equation}
@@ -276,8 +278,9 @@ Or simply
 \begin{equation}\label{eq:discretised_second_derivative}
 \vb{v}''=\hat{\Lambda}_D\vb{v}
 \end{equation}
-where \(\hat{\Lambda}\) is the giant matrix, including the factor \(h^{-2}\). Note that while \(\vb{v}\) contains \(n+2\) points, \(\vb{v}''\) only contains \(n\) points. This is also evident from the fact that \(\hat{\Lambda}_D\) is an \(n\times(n+2)\) matrix. \footnote{The fact that \(\hat{\Lambda}_D\) is an \(n\times(n+2)\) matrix implies that it accepts an \((n+2)\)-dimensional column vector and returns an \(n\)-dimensional column vector.} Furthermore, equation \eqref{eq:discretised_second_derivative} is the discrete equivalent to the continous equation:
+where \(\hat{\Lambda}\) is the giant matrix, including the factor \(h^{-2}\). Note that while \(\vb{v}\) contains \(n+2\) points, \(\vb{v}''\) only contains \(n\) points; this is also evident from the fact that \(\hat{\Lambda}_D\) is an \(n\times(n+2)\) matrix. \footnote{The fact that \(\hat{\Lambda}_D\) is an \(n\times(n+2)\) matrix implies that it accepts an \((n+2)\)-dimensional column vector and returns an \(n\)-dimensional column vector.} Furthermore, equation \eqref{eq:discretised_second_derivative} is the discrete equivalent to the continous equation:
 \[\partial_\xi^2v(\xi)=v''(\xi)\]
+As the local truncation error in each finite difference approximation is of order \(h^2\), and there are \(n\) approximations, the global truncation error goes as \(n\order{h^2}\cong \order{h}\). Hence, \(\hat{\Lambda}_D\) makes a truncation error of order \(h\) when it is used to approximate the continuous second derivative operator.
 \subsubsection{Operator: Multiplication with another function}
 A "multiplication-with-another-function operator" may be written as \(\hat{\Lambda}=g(\xi)\). Compared to the second derivative operator, these operators are much more simple to account for as they do not act on the eigenvector itself. The discretisation of these operators is simply given by \(\hat{\Lambda}_g=\text{diag}\mqty(g(\xi_0)\cdots g(\xi_{n+1})))\), which yields:
 \begin{equation}
@@ -286,7 +289,166 @@ A "multiplication-with-another-function operator" may be written as \(\hat{\Lamb
 
 A common example of these kind of operators are polynomials: \(g(\xi)=\xi^2\), \(g(\xi)=\xi^{-2}\), etc.
 
+\subsection{Solving Matrix Eigenvalue Equations Using Iterative Methods}
+The following section presents ways to tackle matrix equations on the form:
+\begin{equation}\label{eq:general_matrix_eigenvalue_problem}
+\hat{A}\vb{v}=\lambda\vb{v}
+\end{equation}
+where \(\hat{A}\) is a symmetric matrix.
+
+The algorithms presented here are based on the properties of similarity (orthogonal) transformations, and will therefore be dealt with first.
+\subsubsection{Similarity transformations}
+A symmetric matrix \(\hat{A}\in\mathbb{R}^{n\times n}\) is said to be similar to another symmetric matrix \(\hat{B}\in\mathbb{R}^{n\times n}\) if there exist a unitary matrix \(\hat{S}\in\mathbb{R}^{n\times n}\) that is such that
+\begin{equation}\label{eq:definition_similar_matrix}
+\hat{B}=\hat{S}^T\hat{A}\hat{S}
+\end{equation}
+Let \(\{\vb{u}_i\}_{i=1}^{i=n}\) denote an orthonormal basis for the column space of \(\hat{A}\): \(\vb{u}_i^T\vb{u}_j=\delta_{ij}\). The similarity transformation \(\vb{w}_i=\hat{S}^T\vb{u}_i\) preserves the orthonormality of the basis:
+\[\vb{w}_i^T\vb{w}_j=\big(\hat{S}^T\vb{u}_i\big)^T\big(\hat{S}^T\vb{u}_j\big)=\vb{u}_i^T\hat{S}\hat{S}^T\vb{u}_j=\vb{u}_i^T\vb{u}_j=\delta_{ij}\]
+
+The idea is to perform \(m\) number of transformations such that \(\hat{A}\) is diagonalised to \(\hat{D}\):
+\begin{equation}
+\hat{D}=\hat{S}_m^T\hat{S}_{m-1}^T\cdots\hat{S}_1^T\hat{A}\hat{S}_1\cdots\hat{S}_{m-1}\hat{S}_m
+\end{equation}
+where
+\begin{equation}
+\hat{D}=\text{diag}\mqty(\lambda_1&\lambda_2&\cdots&\lambda_n)
+\end{equation}
+Matrices \(\hat{S}_1,\ldots,\hat{S}_m\) are guaranteeed to exist as \(\hat{A}\) is a real symmetric matrix (the proof is not included here). Using \eqref{eq:definition_similar_matrix}, equation \eqref{eq:general_matrix_eigenvalue_problem} yields:
+\[\hat{S}^T\hat{A}\hat{I}\vb{v}=\hat{S}^T\lambda\vb{v}\implies\hat{S}^TA\hat{S}\hat{S}^T\vb{v}=\lambda\hat{S}^T\vb{v}\implies\]
+\begin{equation}\label{eq:similarity_transformed_eigenvalue_problem}
+\hat{B}\big(\hat{S}^T\vb{v}\big)=\lambda\big(\hat{S}^T\vb{v}\big)
+\end{equation}
+As \(\hat{A}\) is a real symmetric matrix, its eigenvectors \(\vb{v}_1,\ldots,\vb{v}_n\) form an orthogonal basis for its column space. And as the transformation \(\hat{S}^T\vb{v}\) conserves orthogonality, the final eigenvectors \(\hat{S}_1\cdots\hat{S}_m\vb{v}\) must also form an orthogonal basis for the column space of \(\hat{A}\). Furthermore, equation \eqref{eq:similarity_transformed_eigenvalue_problem} reveals that the eigenvalue \(\lambda\) of \(\hat{A}\) is unaffected by each transformation.
+
+Now let
+\begin{equation}
+\hat{V}=\mqty[\vu{v}_1&\cdots&\vu{v}_n]=\hat{S}_1\cdots\hat{S}_m\hat{I}
+\end{equation}
+so that \(\hat{V}^T\hat{A}\hat{V}=\hat{D}\). This implies
+\begin{subequations}
+\begin{align}
+\hat{A}\hat{V}&=\mqty[\hat{A}\vu{v}_1\cdots\hat{A}\vu{v}_n]\\
+\hat{A}\hat{V}&=\hat{V}\hat{D}=\mqty[\lambda_1\vu{v}_1&\cdots&\lambda_n\vu{v}_n]
+\end{align}
+\end{subequations}
+which proves that the eigenvectors of \(\hat{A}\) are the vectors \(\vu{v}_1,\ldots,\vu{v}_n\). As orthogonal transformations preserves normalisation, the set \(\{\vu{v}_i\}_{i=1}^{i=n}\) must also form an orthonormal basis for the column space of \(\hat{A}\).
+\subsubsection{The Jacobi eigenvalue algorithm}
+The unitary matrix used in the Jacobi algorithm is the so-called Givens rotation matrix \(\hat{G}(k,l,\theta)\), which is a generalisation of the rotation-matrix for planar (2-dimensional) coordinate systems. The elements in \(\hat{G}(k,l,\theta)\) are given by
+\begin{equation}\label{eq:Givens_rotation_matrix}
+g_{ij}=\begin{cases}1,&i=j\notin\{k,l\} \\ \cos\theta,&i=j\in\{k,l\} \\ \sin\theta,&i=k,\,j=l \\ -\sin\theta,&i=l,\,j=k \\ 0,&otherwise\end{cases}
+\end{equation}
+Before continuing to the actual algorithm, consider first the transformation \(\hat{B}=\hat{G}^T\hat{A}\hat{G}\), where the elements of the symmetric matrices \(\hat{A}\) and \(\hat{B}\) are denoted by \(a_{ij}\) and \(b_{ij}\). The simplest case, i.e. with \(n=2\), is the following
+\[\mqty(b_{11}&b_{12}\\b_{12}&b_{22})=\mqty(c&s\\-s&c)\mqty(a_{11}&a_{12}\\a_{12}&a_{22})\mqty(c&-s\\s&c)\]
+That is:
+\begin{align*}
+b_{11}&=c^2\,a_{11}-2sc\,a_{12}+s^2\,a_{22}\\
+b_{12}&=(c^2-s^2)a_{12}+sc(a_{22}-a_{11})\\
+b_{22}&=s^2\,a_{11}+2sc\,a_{12}+c^2\,a_{22}
+\end{align*}
+So far, no criteria has been placed on the parameter \(\theta\). However, the Jacobi algorith designs the matrix \(\hat{G}\), and thereby \(\theta\), such that \(b_{12}=0\):
+\[a_{11}-a_{22}=\frac{\cos^2\theta-\sin^2\theta}{\sin\theta\cos\theta}a_{12}=(\cot\theta-\tan\theta)a_{12}\]
+Using the identity \(2\cot(2\theta)=\cot\theta-\tan\theta\) one finds:
+\[\cot(2\theta)=\frac{a_{11}-a_{22}}{2a_{12}}\]
+Let \(t=\tan\theta\) and \(\tau=\cot(2\theta)\) so that
+\[2\tau=t^{-1}-t\implies t^2+2\tau\,t-1=0\]
+Which further implies
+\begin{equation}\label{eq:jacobi_algorithm_t}
+t=-\tau\pm\sqrt{1+\tau^2}
+\end{equation}
+Having found \(t\), finding \(s\) and \(c\) is simple:
+\begin{subequations}\label{eq:jacobi_algorithm_cs}
+\begin{align}
+c&=\frac{1}{\sec\theta}=\frac{1}{\sqrt{1+\tan^2\theta}}=\frac{1}{\sqrt{1+t^2}}\\
+s&=\cos\theta\frac{\sin\theta}{\cos\theta}=ct
+\end{align}
+\end{subequations}
+A special case of the transformation is when \(a_{12}=0\): it follows that \(\theta=\pi/4\) and thus \(c=1\), \(s=0\).
+
+By increasing the dimensionality of the transformation from \(n=2\) to any arbitrary \(n\), only two extra cases arise: whether the element \(a_{ij}\) is affected or not depends on its location in the matrix.
+
+The key detail is to realise how the structure of \(\hat{G}\) is related to the identiy matrix: other than the \(k^{\text{th}}\) and \(l^{\text{th}}\) columns and rows, \(\hat{G}\) is essentially an identity matrix. It follows that all elements \(a_{ij}\) where \(i,j\notin\{k,l\}\) seemingly interact with the identity matrix; leaving them unchanged after the transformation: \(b_{ij}=a_{ij}\).
+
+Furthermore, the elements \(b_{kk}\), \(b_{ll}\) and \(b_{kl}\) are the same elements as in the \(n=2\) case. The generalised \(\tau\) is:
+\begin{equation}\label{eq:jacobi_algorithm_tau}
+\tau=\frac{a_{kk}-a_{ll}}{2a_{kl}}
+\end{equation}
+The remaining elements \(b_{ik}=b_{ki}\) and \(b_{il}=b_{li}\), where \(i\notin\{k,l\}\), can be derived from the observation that the matrix product \(\hat{G}^T\hat{A}\) only acts on the rows of \(\hat{A}\), while the matrix product \(\hat{A}\hat{G}\) only acts on the columns of \(\hat{A}\). By computing \(\hat{A}\hat{G}\) (details omitted here), one finds:
+\[b_{ik}=ca_{ik}-sa_{il}\qand b_{il}=sa_{ik}+ca_{il}\]
+In summary, the elements of \(\hat{B}\) are given by:
+\begin{subequations}\label{eq:Givens_transformation_matrix}
+\begin{alignat}{3}
+b_{ij}&=a_{ij},&&i,j\notin\{k,l\}\\
+b_{ik}&=ca_{ik}-sa_{il},&&i\notin\{k,l\}\\
+b_{il}&=sa_{il}+ca_{il},&&i\notin\{k,l\}\\
+b_{kk}&=c^2a_{kk}-2sca_{kl}+s^2a_{ll}&&\\
+b_{ll}&=c^2a_{kk}+2sca_{kl}+s^2a_{ll}&&\\
+b_{kl}&=0&&
+\end{alignat}
+\end{subequations}
+After performing the transformation, the eigenvectors (i.e. \(\hat{V}=\mqty[\vu{v}_1&\cdots&\vu{v}_n]\)) must also be updated in order to remain eigenvectors for the transformed matrix:
+\begin{equation}
+\hat{V}_{new}=\hat{V}_{old}\hat{G}
+\end{equation}
+This operation exactly mirrors \(\hat{A}\hat{G}\), hence:
+\begin{subequations}\label{eq:Givens_transformation_eigenvectors}
+\begin{alignat}{2}
+v_{ik}^{\text{new}}&=cv_{ik}^{\text{old}}-sv_{il}^{\text{old}},&\quad i\notin\{k,l\}\\
+v_{il}^{\text{new}}&=sv_{il}^{\text{old}}+cv_{il}^{\text{old}},&\quad i\notin\{k,l\}
+\end{alignat}
+\end{subequations}
+
+The Jacobi algorithm is essentially comprised of performing orthogonal transformations \(\hat{A}_{p+1}=\hat{G}^T\hat{A}_p\hat{G}\) until \(\hat{A}\) is "successfully diagonalised". As this process is iterative, true diagonalisation is only guaranteed in the limit \(p\to\infty\). In order to terminate the process, the quality of the diagonalisation must be measured by some criterion at the end of each iteration. A commonly used measure is whether the off-diagonal elements of \(\hat{A}_p\) are sufficiently small:
+\begin{equation}\label{eq:off_diagonal_frobenius}
+\text{off}(\hat{A})=\sqrt{\sum_{i=1}^n\sum_{j\neq i}^na_{ij}^2}\leq\epsilon
+\end{equation}
+for some error tolerance \(\epsilon\). However, it is computationally very ineffective to require the computation of \(\text{off}(\hat{A})\) at each iteration. Instead, consider the following:
+\begin{equation}\label{eq:off_diagonal_with_max}
+\text{off}(\hat{A})\leq\sqrt{\sum_{i=1}^n\sum_{j\neq i}^n\max\{a_{ij}^2\}}=n\max\{|a_{ij}|\}
+\end{equation}
+Finding \(n\max\{|a_{ij}|\}\) is much more computation-friendly and is thus better suited for the algorithm. As \(n\) simply scales the tolerance, the essential measure is:
+\begin{equation}\label{eq:jacobi_algorithm_tolerance}
+\max\{|a_{ij}|\}\leq\varepsilon
+\end{equation}
+The number of iterations required to satisfy \eqref{eq:jacobi_algorithm_tolerance} is difficult to quantify. In order to avoid unpredictably long computation time, a maximum number of iterations \(N_{\text{max}}\) is also enforced in the algorithm.
+
+Due to the miniscule effects of the transformation (it only affects the \(k^{\text{th}}\) and \(l^{\text{th}}\) columns and rows), the choice of coefficients \(k\) and \(l\) becomes very important. Seeing that the transformation defines \(b_{kl}=0\), a clever approach would be to choose \(k\) and \(l\) using \(\max\{|a_{ij}|\}\). This approach is also the most effective with respect to equation \eqref{eq:jacobi_algorithm_tolerance} in that each step reduces the current \(\max\{|a_{ij}|\}\) to zero.
+
+The full Jacobi-diagonalisation algorithm can be summaried as follows:
+\begin{enumerate}
+\item Set \(p=0\), load \(\hat{A}_0\) and define \(\hat{V}=\hat{I}\).
+\item Compute \(a_{kl}=a_{max}=\max\{|a_{ij}|\}\).
+\item \texttt{while} \(\max\{|a_{ij}|\}>\varepsilon\,\) \texttt{and} \(p\leq N_{\text{max}}\):
+	\begin{itemize}
+	\item[]Compute \(\tau\), \(t\), \(c\) and \(s\) using equations \eqref{eq:jacobi_algorithm_tau}, \eqref{eq:jacobi_algorithm_t} and 	\eqref{eq:jacobi_algorithm_cs} respectively.
+	\item[]Use equations \eqref{eq:Givens_transformation_matrix} to adjust \(\hat{A}_{p+1}\).
+	\item[]Use equations \eqref{eq:Givens_transformation_eigenvectors} to adjust \(\hat{V}_{p+1}\).
+	\item[]Find \(a_{kl}=a_{max}=\max\{|a_{ij}|\}\).
+	\item[]\(p=p+1\).
+	\end{itemize}
+\item Extract
+\[\mqty[\lambda_1&\cdots&\lambda_n]=\text{diag}(\hat{A}_p)\qand\mqty[\vu{v}_1&\cdots&\vu{v}_n]=\hat{V}\]
+\end{enumerate}
+
 \section{Method}
+\subsection{Analysing the buckling beam}
+This first problem serves mainly as a test for both the Jacobi algorithm and the mathematical formalism developed in the theory section. The existence of simple analytic eigenvalues makes the problem an excellent starting point.
+
+Equation \eqref{eq:dimless_buckling_beam}, which governs the system, contains the second derivative operator \(\partial_\xi^2\). Employing the discretisation formalism yields the equation
+\begin{equation}\label{eq:discrete_dimless_buckling_beam}
+\hat{\Lambda}_D\vb{v}=-\lambda\vb{v}
+\end{equation}
+However, by imposing the Dirichlet boundary conditions \(v_0=v_{n+1}=0\) it is apparent that the first and last columns of \(\hat{\Lambda}_D\) serves no purpose. Ignoring these columns results in the symmetric tridiagonal matrix eigenvalue equation:
+\begin{equation}\label{eq:method:buckling_beam}
+D\tilde{\vb{v}}=-\lambda\tilde{\vb{v}}
+\end{equation}
+where \(D\) is the symmetric tridiagonal matrix (without the \(h^2\) term) and \(\tilde{\vb{v}}=h^2\mqty(v_1&\cdots&v_n)^T\).
+
+Equation \eqref{eq:method:buckling_beam} is solved using the Jacobi algorithm for all combinations of \(\varepsilon\in\{10^{-4},10^{-6},10^{-8}\}\) and \(N_{\text{max}}\in\{10^1,10^2,10^3\}\). Our interest lies in the accuracy of the Jacobi algorithm, which is why \(\vb{v}\) will not be computed from \(\tilde{\vb{v}}\) after the algorithm has terminated (it simply scales the solutions). The plot of \(\tilde{\vb{v}}\) will be compared to the analytic sine solutions with \(A=1\) (as the eigenvectors are determined from \(\hat{I}\)).
+
+In order to add an additional layer of confidence to the accuracy of the algorithm, the same system will be analysed using the \texttt{eig\_sym} function from the \texttt{Armadillo C++} library.
+\subsection{Analysing The Quantum Harmonic Oscillator Potential}
+Having completed a preliminary test of the algorithm.
+
 
 
 

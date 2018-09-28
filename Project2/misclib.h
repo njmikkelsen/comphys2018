@@ -21,6 +21,8 @@ double ** init_symmetric_random_matrix (const int m, const int n);
 double ** init_symmetric_random_matrix (const int n);
 double ** init_identity_matrix (const int m, const int n);
 double ** init_identity_matrix (const int n);
+double ** init_tridiag_Toeplitz_matrix(const int m, const int n, double a, double b, double c);
+double ** init_tridiag_Toeplitz_matrix(const int n, double a, double b, double c);
 void delete_matrix (const int n, double ** M);
 
 void     scale_matrix        (const int n, double **M, double c);
