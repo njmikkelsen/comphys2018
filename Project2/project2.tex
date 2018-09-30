@@ -62,6 +62,7 @@ Project 2 in FYS3150 Computational Physics is concerned with the problem of solv
 The matrix eigenvalue equations will be solved using the famous Jacobi eigenpair/diagonalisation algorithm, which is an essential algorithm in the field of numerical Linear Algebra. More modern methods (such as Householder's algorithm, etc.) have been proven to be much more effective than the Jacobi algorithm with respect accuracy, stability and computation-time. Nonetheless, the Jacobi algorithm is historically important and serves as a stepping stone for future study of more complex methods.
 
 Having applied the algorithm to the simpler cases, the project will expand its horizon and study a Coulomb-interaction pair of electrons, situated in a harmonic oscillator potential.
+\newpage
 \section{Theory}
 All eigenvalue problems may be written as
 \begin{equation}
@@ -224,6 +225,7 @@ The eigenvalues are given by
 \end{equation}
 \subsection{Discretisation}\label{sec:discretisation}
 Let \(\xi\in[a,b]\) denote an independent variable and \(v(\xi)\in\mathbb{R}\) denote a dependent variable that satisfies some eigenvalue equation \(\hat{\Lambda} v(\xi)=\lambda v(\xi)\), where the variables and the operator are continuous objects. The operator may be a linear combination of several operators \(\hat{\Lambda}=\hat{\Lambda}_1+\hat{\Lambda}_2+\cdots\). The following section is concerned with the discretisation of these variables and operators.
+\newpage
 \subsubsection{The variables}
 The first step is to discretise the \(\xi\)-interval \([a,b]\) into \(n+1\) slices such that \(\xi\) is replaced by a grid with \(n+2\) \(\xi_i\) values:
 \begin{equation}
@@ -293,6 +295,7 @@ Or simply
 where \(\hat{\Lambda}\) is the giant matrix, including the factor \(h^{-2}\). Note that while \(\vb{v}\) contains \(n+2\) points, \(\vb{v}''\) only contains \(n\) points; this is also evident from the fact that \(\hat{\Lambda}_D\) is an \(n\times(n+2)\) matrix. \footnote{The fact that \(\hat{\Lambda}_D\) is an \(n\times(n+2)\) matrix implies that it accepts an \((n+2)\)-dimensional column vector and returns an \(n\)-dimensional column vector.} Furthermore, equation \eqref{eq:discretised_second_derivative} is the discrete equivalent to the continous equation:
 \[\partial_\xi^2v(\xi)=v''(\xi)\]
 As the local truncation error in each finite difference approximation is of order \(h^2\), and there are \(n\) approximations, the global truncation error goes as \(n\order{h^2}\cong \order{h}\). Hence, \(\hat{\Lambda}_D\) makes a truncation error of order \(h\) when it is used to approximate the continuous second derivative operator.
+\newpage
 \subsubsection{Operator: Multiplication with another function}
 A "multiplication-with-another-function operator" may be written as \(\hat{\Lambda}=g(\xi)\). Compared to the second derivative operator, these operators are much more simple to account for as they do not act on the eigenvector itself. The discretisation of these operators is simply given by \(\hat{\Lambda}_g=\text{diag}\mqty(g(\xi_0)\cdots g(\xi_{n+1})))\), which yields:
 \begin{equation}
@@ -483,27 +486,32 @@ G\tilde{\vb{v}}=-\lambda\tilde{\vb{v}}
 \end{equation}
 where \(\tilde{\vb{v}}=h^2\mqty[v_1&\cdots&v_n]\) and \(G\) is a tridiagonal matrix whose coefficients are \(-2-h^2(\omega^2\rho^2+\rho^{-1})\) along the central diagonal and 1 along both the upper and lower diagonals.
 
-The end-goal is study the balance between the Coulomb-interaction and the harmonic oscillator potential: while the Coulomb potential repels the electrons, the harmonic oscillator potential centers the electrons about the origin, thereby forcing them closer together. This balance will be studied via the parameter \(\omega\in\{\}\). Other parameters used in the program include \(n=300\), \(\varepsilon=10^{-8}\), sufficient \(N_\text{max}\) and a sufficient \(\rho_\infty\). \footnote{The use of ``sufficient'' here implies that the parameter is determined such that it has no affect on the results.} In order to gain some insight from the results, the resulting probability distributions \(p(\rho)=|v(\rho)|^2\) will be compared. However, to avoid unecessary confusion with the energy, only the ground state will be analysed.
+The end-goal is study the balance between the Coulomb-interaction and the harmonic oscillator potential: while the Coulomb potential repels the electrons, the harmonic oscillator potential centers the electrons about the origin, thereby forcing them closer together. This balance will be studied via the parameter \(\omega\in\{0.1,1,2.5,5\}\). Other parameters used in the program include \(n=200\), \(\varepsilon=10^{-8}\), sufficient \(N_\text{max}\) and a sufficient \(\rho_\infty\). \footnote{The use of ``sufficient'' here implies that the parameter is determined such that it has no affect on the results.} In order to gain some insight from the results, the resulting probability distributions \(p(\rho)=|v(\rho)|^2\) will be compared. However, to avoid unecessary energy-considerations, only the ground state will be analysed.
 \section{Results}
-For the sake of not included 10 identical figures, only a handful of the prepared figures are featured. All figures, along with all other material, are available on at the github address:\\
+Only a handful of the prepared figures are featured, all figures are available at the GitHub address:\\
 {\scriptsize\url{https://github.com/njmikkelsen/comphys2018/tree/master/Project2}}
 \subsection{The Buckling Beam}
 A clear trend revealed itself whilst studying this system: the Jacobi algorithm is slow, however accurate. Moreover, it's accuracy is dependent on a sufficient user-defined tolerance \(\varepsilon\). Figure \ref{fig:bucklingbeam_eigenvectors1} shows an example with \(n=100\) and an error tolerence of only \(\varepsilon=10^{-2}\): the resulting eigenvector becomes terribly off. As long as the user is aware of this potential pitfall, this is not necessarily a big problem. Figure \ref{fig:bucklingbeam_eigenvectors2} shows another example with \(n=100\), however now with \(\varepsilon=10^{-10}\): the eigenvector comes out as expected.
-\begin{figure}[h]
+
+While some of the eigenvectors in computations with large \(\varepsilon\) turned out completely wrong, the eigenvalues matched the analytic eigenvalues very well in almost every computation. Table \ref{tab:bucklingbeam_MSE} shows a Mean Square Error (MSE) score for every computation: most notably there are no immediately critical errors. \texttt{armadillo} performs especially impressive with zero error within the specified precision, Jacobi performs also quite well.
+\subsection{The Harmonic Oscillator}
+The importance of an appropriate approximation of infinity is summarised by figures \ref{fig:harmonicoscillator_eigenvectors1} and \ref{fig:harmonicoscillator_eigenvectors2}: While figure \ref{fig:harmonicoscillator_eigenvectors1} features greatly distorted wave functions, figure \ref{fig:harmonicoscillator_eigenvectors2}, which is much more generous in its approximation of infinity, yields therefore much more accurate results. One detail that is particulary noticeable between the two is the maximum height of the wave functions. Whereas all wave functions are more or less equally tall in figure \ref{fig:harmonicoscillator_eigenvectors1}, there is a clear difference between the different concentrations in figure \ref{fig:harmonicoscillator_eigenvectors2}.
+\subsection{The Coulomb-Interacting Electron-Electron Harmonic Oscillator}
+The effect of adjusting the harmonic oscillator frequency is immediately obvious from figures \ref{fig:interactingelectrons_eigenvectors1}, \ref{fig:interactingelectrons_eigenvectors2} and \ref{fig:interactingelectrons_eigenvectors3}: Increasing the frequency, which leads to a relative decrease in the repulsive Coulomb interaction, yields a concentration of the electrons. This is not surprising as there are only potentials working against each other: the Coulomb-interaction trying to pull the electrons a part, and the harmonic oscillator trying to concentrate the electrons about a common center. The relative increase in the strength of the harmonic oscillator is therefore expected to lead to a greater probability concentration closer to the origin.
+\newpage
+\begin{figure}[ht!]
 \centering
-\includegraphics[scale=0.275]{BucklingBeam/plots/vector100_2.png}
+\includegraphics[scale=0.27]{BucklingBeam/plots/vector100_2.png}
 \caption{Some eigenvectors of the Buckling Beam system. The numerical calculation defined \(n=100\) and \(\varepsilon=10^{-2}\).}
 \label{fig:bucklingbeam_eigenvectors1}
 \end{figure}
-\begin{figure}[h]
+\begin{figure}[ht!]
 \centering
-\includegraphics[scale=0.275]{BucklingBeam/plots/vector100_10.png}
-\caption{Some eigenvectors of the Buckling Beam system. The numerical calculation defined \(n=100\) and \(\varepsilon=10^{-2}\).}
+\includegraphics[scale=0.27]{BucklingBeam/plots/vector100_10.png}
+\caption{Some eigenvectors of the Buckling Beam system. The numerical calculation defined \(n=100\) and \(\varepsilon=10^{-10}\).}
 \label{fig:bucklingbeam_eigenvectors2}
 \end{figure}
-
-While some of the eigenvectors in computations with large \(\varepsilon\) turned out completely wrong, the eigenvalues matched the analytic eigenvalues very well in almost every computation. Table \ref{tab:bucklingbeam_MSE} shows a Mean Square Error (MSE) score for every computation: most notably there are no immediately critical errors. \texttt{armadillo} performs especially impressive with zero error within the specified precision, Jacobi performs also quite well.
-\begin{table}[h]
+\begin{table}[ht!]
 \centering
 \caption{Mean Square Error score for both the Jacobi-calculated eigenvalues and the \texttt{armadillo}-calculated eigenvalues for every computation of the Buckling Beam system. The figures have been truncated due to uneccesary precision.}\label{tab:bucklingbeam_MSE}
 \begin{tabular}{|c|c|c|c|}
@@ -520,46 +528,52 @@ While some of the eigenvectors in computations with large \(\varepsilon\) turned
 300   & \(10^{-10}\)    &  0                     & 0                      \\\hline
 \end{tabular}
 \end{table}
-\subsection{The Harmonic Oscillator}
-The importance of choosing an appropriate approximation of infinity can be summaried by figures \ref{fig:harmonicoscillator_eigenvectors1} and \ref{fig:harmonicoscillator_eigenvectors2}: While the major shape is conserved, the curvature of the wave functions are very distorted in figure \ref{fig:harmonicoscillator_eigenvectors1}. Figure \ref{fig:harmonicoscillator_eigenvectors2} on the other hand is much more generous with its infinity and yields therefore much more accurate results. One detail that is particulary noticeable between the two is the maximum height of the wave functions. Whereas all wave functions are more or less equally tall in figure \ref{fig:harmonicoscillator_eigenvectors1}, there is a clear difference between the different concentrations in figure \ref{fig:harmonicoscillator_eigenvectors2}.
-\begin{figure}[h]
+\newpage
+\begin{figure}[ht]
 \centering
-\includegraphics[scale=0.27]{HarmonicOscillator/plots/wavefunction80_1.png}
+\includegraphics[scale=0.25]{HarmonicOscillator/plots/wavefunction80_1.png}
 \caption{The first wavefunctions of the radial quantum harmonic oscillator. Here, infinity is approximated by \(\xi_\infty=0.1\).}
 \label{fig:harmonicoscillator_eigenvectors1}
 \end{figure}
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
-\includegraphics[scale=0.27]{HarmonicOscillator/plots/wavefunction80_4.png}
+\includegraphics[scale=0.25]{HarmonicOscillator/plots/wavefunction80_4.png}
 \caption{The first wavefunctions of the radial quantum harmonic oscillator. Here, infinity is approximated by \(\xi_\infty=0.4\).}
 \label{fig:harmonicoscillator_eigenvectors2}
 \end{figure}
-\subsection{The Coulomb-Interacting Electron-Electron Harmonic Oscillator}
-The effect of adjusting the harmonic oscillator frequency is immediately obvious from figures \ref{fig:interactingelectrons_eigenvectors1}, \ref{fig:interactingelectrons_eigenvectors2} and \ref{fig:interactingelectrons_eigenvectors3}: Increasing the frequency, which leads to a relative decrease in the repulsive Coulomb interaction, yields a concentration of the electrons. This is not surprising as there are only potentials working against each other: the Coulomb-interaction trying to pull the electrons a part, and the harmonic oscillator trying to concentrate the electrons about a common center. The relative increase in the strength of the harmonic oscillator is therefore expected to lead to a greater probability concentration closer to the origin.
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
-\includegraphics[scale=0.275]{InteractingElectrons/plots/prob200_1.png}
+\includegraphics[scale=0.25]{InteractingElectrons/plots/prob200_1.png}
 \caption{The radial ground state of the Coulomb-interacting electron-electron quantum harmonic oscillator. Here, infinity is approximated by \(\xi_\infty=0.2\) and the harmonic oscillator frequency is \(\omega=0.1\).}
 \label{fig:interactingelectrons_eigenvectors1}
 \end{figure}
-\begin{figure}[h!]
+\begin{figure}[ht]
 \centering
-\includegraphics[scale=0.275]{InteractingElectrons/plots/prob200_10.png}
+\includegraphics[scale=0.25]{InteractingElectrons/plots/prob200_10.png}
 \caption{The radial ground state of the Coulomb-interacting electron-electron quantum harmonic oscillator. Here, infinity is approximated by \(\xi_\infty=0.2\) and the harmonic oscillator frequency is \(\omega=1.0\).}
 \label{fig:interactingelectrons_eigenvectors2}
 \end{figure}
-\begin{figure}[h!]
+\section{Discussion}
+The goal of this project was to study eigenvalue problems using discrete mathematics and the Jacobi algorithm. Overall the project was a success: the systems in question were satisfactorily modelled, provided an appropriate set of parameters.
+
+The discrete formalism was a little tedius to setup, especially due to its generality. Once introduced however, applying it to specific systems was increadibly easy. The mathematics is obviously dependent on the chosen number of grid points, in particular the complexity of the resulting matrix equation is directly affected. While increasing the number of grid points leads to more accurate results, the neccessary amount of operations required to solve the system grows exponentially.
+
+The Jacobi algorithm proved well-equipped to handle low-dimensional equations: as the dimensionality increased, the efficiency dropped significantly. Furthermore, the accuracy of algorithm was very suceptible to the tolerance, and its efficiency did not scale well with 
+improved tolerance. Nonetheless, provided an adequate set of parameters, the algorithm did reproduce the expected results. This is especially visible in figures \ref{fig:bucklingbeam_eigenvectors1} and \ref{fig:bucklingbeam_eigenvectors2} in which the tolerances are \(\varepsilon=10^{-2}\) and \(\varepsilon=10^{-10}\) (all other parameters kept constant). It's tempting to assign the errors of the Jacobi algorithm to a mixture of the algorithm and the chosen dimensionality of the problem, this is however proven wrong by the accuracy of the \texttt{armadillo} results. In particular, table \ref{tab:bucklingbeam_MSE} proves that the numerical errors produced by the Jacobi algorithm is entirely attributable to the algorithm tolerance.
+\newpage
+\begin{figure}[ht]
 \centering
-\includegraphics[scale=0.275]{InteractingElectrons/plots/prob200_50.png}
+\includegraphics[scale=0.25]{InteractingElectrons/plots/prob200_50.png}
 \caption{The radial ground state of the Coulomb-interacting electron-electron quantum harmonic oscillator. Here, infinity is approximated by \(\xi_\infty=0.2\) and the harmonic oscillator frequency is \(\omega=2.5\).}
 \label{fig:interactingelectrons_eigenvectors3}
 \end{figure}
-\section{Discussion}
-
-
+\newpage
 \section{Conclusion}
+In conclusion, project 2 has been an overall success. The major goals of project 2 was to study eigenvalue problems using discrete mathematics and the Jacobi algorithm. Three physical systems were studied: the buckling beam, the quantum harmonic oscillator and two Coulomb-interacting electrons in a harmonic oscillator potential. All the governing equations of these systems were derived using continuous mathematics. A discretisation process transformed the equations to matrix eigenvalue equations by introducing a fixed grid. 
 
-\nocite{lecture_ode}\nocite{lecture_linalg}
+The buckling beam served as a test for the algorithm. The results indicated that the algorithm provided sufficiently accurate results as long as an appropriate tolerance was used. The results from the harmonic oscillator showed that for grids that approximate infinity, the choice of upper boundary has distinct effect on the shape of the eigenvectors if set to low. The final example, namely the electron-electron system, effectively showed the balance between the harmonic oscillator and the Coulomb-interaction: By increasing the oscillation frequency, the harmonic oscillator began dominating the Coulomb-interaction. This forced the repelling electrons closer to the origin, increasing the probability density of finding the electrons about the origin.
+
+\nocite{lecture_ode}\nocite{lecture_linalg}\nocite{eigenvalues}
 \bibliographystyle{plain}
 \bibliography{references}
 \end{document}
