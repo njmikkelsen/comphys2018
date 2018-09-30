@@ -2,11 +2,12 @@
 
 /*
 --------------------------------------------------------------------------------------------------------------------------
-DISPLAY MATRICES ON THE COMMAND LINE
+DISPLAY MATRICES & VECTORS ON THE COMMAND LINE
 --------------------------------------------------------------------------------------------------------------------------
 */
 
-void display_matrix(const int m, const int n, double **M, string matrix, int precision) {
+// display a matrix
+void display_matrix (const int m, const int n, double **M, string matrix, int precision) {
   int i,j;
   ios_base::fmtflags f(cout.flags());
   cout.flags(f);
@@ -25,8 +26,21 @@ void display_matrix(const int m, const int n, double **M, int precision) {displa
 
 // square nxn matrices
 void display_matrix(const int n, double **M)                {display_matrix(n,n,M,"matrix",4);};
-void display_matrix(const int n, double **M, string matrix) {display_matrix(n,n,M,matrix  ,4);};
+void display_matrix(const int n, double **M, string matrix) {display_matrix(n,n,M,matrix,  4);};
 void display_matrix(const int n, double **M, int precision) {display_matrix(n,n,M,"matrix",precision);};
+
+// display a vector
+void display_vector (const int n, double *v, string vector, int precision) {
+  int i,j;
+  ios_base::fmtflags f(cout.flags());
+  cout.flags(f);
+  cout << vector << " = " << showpos << setprecision(precision) << scientific << endl;
+  for (i=0; i<n; i++) {cout << "  " << v[i] << "  " << endl;};
+  cout.flags(f);
+};
+void display_vector (const int n, double *v)                {display_vector(n,v,"vector",4);};
+void display_vector (const int n, double *v, string vector) {display_vector(n,v,vector,  4);};
+void display_vector (const int n, double *v, int precision) {display_vector(n,v,"vector",precision);};
 
 /* 
 --------------------------------------------------------------------------------------------------------------------------
@@ -110,7 +124,7 @@ void delete_matrix (const int n, double ** M) {
 
 /* 
 --------------------------------------------------------------------------------------------------------------------------
-MATRIX OPERATIONS
+MATRIX & VECTOR OPERATIONS
 --------------------------------------------------------------------------------------------------------------------------
 */
 
@@ -127,5 +141,33 @@ double * get_matrix_diagonal (const int n, double **M) {
   diag = new double [n];
   for (i=0; i<n; i++) {diag[i] = M[i][i];};
   return diag;
+};
+
+// sort a vector from minimum to maximum
+double * sort_vector (const int n, double *v, int *idx) {
+  // misc
+  int i,j;
+  double c;
+  double min = v[0];
+  double max = v[0];
+  // find max and min
+  for (i=1; i<n; i++) {
+    if (v[i] < min) {min=v[i];idx[0]  =i;};
+    if (v[i] > max) {max=v[i];idx[n-1]=i;};
+  };
+  double *v_new; v_new = new double [n];
+  v_new[0] = min; v_new[n-1] = max;
+  // main loop - builds every element of v_new
+  for (i=1; i<n-1; i++) {
+    c = max;
+    for (j=0; j<n; j++) {
+      if (v[j]>v_new[i-1] && v[j] < c) {
+        c      = v[j];
+        idx[i] = j;
+      };
+    };
+    v_new[i] = c;
+  };
+  return v_new;
 };
 

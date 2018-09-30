@@ -75,18 +75,18 @@ void doGivensSimTrans (const int n, double **A, double **V, int k, int l) {
   for (i=0; i<n; i++) {
     // elements in A other than a_kk, a_ll, a_kl, a_lk
     if (i!=k && i!=l) {
-      a_ik = A[i][k];
-      a_il = A[i][l];
+      a_ik    = A[i][k];
+      a_il    = A[i][l];
       A[i][k] = c*a_ik - s*a_il;
       A[i][l] = c*a_il + s*a_ik;
       A[k][i] = A[i][k];
       A[l][i] = A[i][l];
     };
     // the eigenvector matrix
-    v_ik = V[i][k];
-    v_il = V[i][l];
+    v_ik    = V[i][k];
+    v_il    = V[i][l];
     V[i][k] = c*v_ik - s*v_il;
-    V[i][l] = c*v_il + s*v_ik;
+    V[i][l] = s*v_ik + c*v_il;
   };
 };
 

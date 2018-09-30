@@ -57,15 +57,17 @@ This is a report for Project 2 in FYS3150 Computational Physics at UiO, due Octo
 All material written for this report can be found in this GitHub repository:\\
 {\scriptsize\url{https://github.com/njmikkelsen/comphys2018/tree/master/Project2}}
 \section{Introduction}
+Project 2 in FYS3150 Computational Physics is concerned with the problem of solving eigenvalue problems, in particular matrix eigenvalue problems. However, instead of solving arbitrary eigenvalue problems, this report will investigate some important examples from physics: the buckling beam and the radial harmonic oscillator. Most of the equations are already on the eigenvalue-problem format. However, further treatment will bring the equations to dimensionsless form in order to highlight their underlying similarities, especially in the context of solving them by numerical means. In the following sections, all the continuous problems will be introduced before the discretisation process.
 
+The matrix eigenvalue equations will be solved using the famous Jacobi eigenpair/diagonalisation algorithm, which is an essential algorithm in the field of numerical Linear Algebra. More modern methods (such as Householder's algorithm, etc.) have been proven to be much more effective than the Jacobi algorithm with respect accuracy, stability and computation-time. Nonetheless, the Jacobi algorithm is historically important and serves as a stepping stone for future study of more complex methods.
+
+Having applied the algorithm to the simpler cases, the project will expand its horizon and study a Coulomb-interaction pair of electrons, situated in a harmonic oscillator potential.
 \section{Theory}
 All eigenvalue problems may be written as
 \begin{equation}
 \hat{\Lambda}f=\lambda f
 \end{equation}
 where \(f\) and \(\lambda\) is an eigenvector-eigenvalue eigenpair of the operator \(\hat{\Lambda}\). Other than requiring the existence of at least one eigenvector, the operator \(\hat{\Lambda}\) does not need to be restricted in any particular way.
-
-Instead of solving arbitrary eigenvalue problems, this report will investigate some important examples from physics. Most of the equations are already on the eigenvalue-problem format. However, further treatment will bring the equations to dimensionsless form in order to highlight their underlying similarities, especially in the context of solving them by numerical means. In the following sections, all the continuous problems will be introduced before the discretisation process.
 \subsection{Eigenvalue Problems in Physics:\\The Buckling Beam}
 A straight non-rigid beam of length \(L\) is fastened at \(x=0\) and \(x=L\). A constant uniform force \(\vb{F}=-F\vu{e}_x\) is applied to the beam at \(x=L\) such that the beam is bended in the \(\vu{e}_y\) direction with displacement \(y(x)\). Using infinitesimal analysis, one can show that the beam's bending behaves according to
 \begin{equation}\label{eq:initial_buckling_beam}
@@ -78,8 +80,6 @@ The next step is to introduce the dimensionless variables \(\xi=x/L\) and \(v(\x
 \partial_{\xi}^2v(\xi)=-\lambda v(\xi)
 \end{equation}
 Here, \(v(\xi)\) are eigenvectors with corresponding eigenvalues \(-\lambda=FL^2/\gamma\).
-
-By inspecting \eqref{eq:dimless_buckling_beam} it is easy to see that the eigenvectors must be on the form \(v(\xi)=A\sin(B\xi+C)\). It follows from \(\partial_\xi^2v(\xi)=-B^2 v(\xi)\) that \(\lambda=B^2\). Furthermore, by imposing \(v(0)=0\) (while assuming \(A\neq0\)) one finds \(C=0\) such that \(v(1)=0=A\sin(\sqrt{\lambda})\), which implies that \(\lambda=n^2\pi^2\) for all integer \(n\).
 \subsection{Eigenvalue Problems in Physics:\\The Radial Schrödinger Equation}\label{sec:radial_scrodinger_equation}
 Provided the spherical coordinates basis \(\{\ket{r,\theta,\varphi}\}\), the Hamiltonian for a particle of mass \(m\) in a spherically symmetric potential \(V(r)\) may be written as
 \begin{equation}\label{eq:std_hamiltonian}
@@ -210,6 +210,18 @@ In conclusion, the total energy of the electron-electron system is given by
 E=E_R+E_r=\hbar\omega\bigg(2n_R+\ell_R+\frac{3}{2}\bigg)-\frac{4mk^2}{\hbar^2}\lambda_r
 \end{equation}
 
+\subsection{Eigenvalues Of Tridiagonal Matrices}
+The following theorem will not be proven here, but is included due to its comparative applications in this project.
+
+Provided the following tridiagonal matrix equation:
+\begin{equation}
+\hat{A}\hat{\vb{x}}=\lambda\hat{\vb{x}}
+\end{equation}
+where \(\lambda\in\mathbb{R}\), \(\hat{\vb{x}}^T=\mqty[x_1&\cdots&x_n]\) and \(\hat{A}\) is composed by a central, upper and lower diagonal diagonal. All elements along the central diagonal are equal to \(b\), while all elements along the upper and lower diagonals are equal to \(a\).
+The eigenvalues are given by
+\begin{equation}\label{eq:tridiag_matrix_equation_eigenvalues}
+\lambda_i=b+2a\cos\bigg[\frac{i\pi}{n+1}\bigg]\qfor i=1,2,\ldots,n
+\end{equation}
 \subsection{Discretisation}\label{sec:discretisation}
 Let \(\xi\in[a,b]\) denote an independent variable and \(v(\xi)\in\mathbb{R}\) denote a dependent variable that satisfies some eigenvalue equation \(\hat{\Lambda} v(\xi)=\lambda v(\xi)\), where the variables and the operator are continuous objects. The operator may be a linear combination of several operators \(\hat{\Lambda}=\hat{\Lambda}_1+\hat{\Lambda}_2+\cdots\). The following section is concerned with the discretisation of these variables and operators.
 \subsubsection{The variables}
@@ -284,19 +296,17 @@ As the local truncation error in each finite difference approximation is of orde
 \subsubsection{Operator: Multiplication with another function}
 A "multiplication-with-another-function operator" may be written as \(\hat{\Lambda}=g(\xi)\). Compared to the second derivative operator, these operators are much more simple to account for as they do not act on the eigenvector itself. The discretisation of these operators is simply given by \(\hat{\Lambda}_g=\text{diag}\mqty(g(\xi_0)\cdots g(\xi_{n+1})))\), which yields:
 \begin{equation}
-\hat{\Lambda}_g\vb{v}=\mqty(g(\xi_0)v_0\\g(\xi_1)v_1\\\vdots\\g(\xi_{n+1})v_{n+1})
+\hat{\Lambda}_g\vb{v}=\mqty[g(\xi_0)v_0 & \cdots & g(\xi_{n+1})v_{n+1}]^T
 \end{equation}
 
 A common example of these kind of operators are polynomials: \(g(\xi)=\xi^2\), \(g(\xi)=\xi^{-2}\), etc.
 
-\subsection{Solving Matrix Eigenvalue Equations Using Iterative Methods}
-The following section presents ways to tackle matrix equations on the form:
+\subsection{Solving Matrix Eigenvalue Equations Via The Jacobi Algorithm}
+The following section presents the Jacobi eigenpair/diagonalisation algorithm for solving matrix eigenvalue equations on the form:
 \begin{equation}\label{eq:general_matrix_eigenvalue_problem}
 \hat{A}\vb{v}=\lambda\vb{v}
 \end{equation}
-where \(\hat{A}\) is a symmetric matrix.
-
-The algorithms presented here are based on the properties of similarity (orthogonal) transformations, and will therefore be dealt with first.
+where \(\hat{A}\) is a symmetric matrix. The algorithm is based on the properties of similarity (orthogonal) transformations, and will therefore be dealt with first.
 \subsubsection{Similarity transformations}
 A symmetric matrix \(\hat{A}\in\mathbb{R}^{n\times n}\) is said to be similar to another symmetric matrix \(\hat{B}\in\mathbb{R}^{n\times n}\) if there exist a unitary matrix \(\hat{S}\in\mathbb{R}^{n\times n}\) that is such that
 \begin{equation}\label{eq:definition_similar_matrix}
@@ -332,7 +342,7 @@ so that \(\hat{V}^T\hat{A}\hat{V}=\hat{D}\). This implies
 \end{align}
 \end{subequations}
 which proves that the eigenvectors of \(\hat{A}\) are the vectors \(\vu{v}_1,\ldots,\vu{v}_n\). As orthogonal transformations preserves normalisation, the set \(\{\vu{v}_i\}_{i=1}^{i=n}\) must also form an orthonormal basis for the column space of \(\hat{A}\).
-\subsubsection{The Jacobi eigenvalue algorithm}
+\subsubsection{The algorithm}
 The unitary matrix used in the Jacobi algorithm is the so-called Givens rotation matrix \(\hat{G}(k,l,\theta)\), which is a generalisation of the rotation-matrix for planar (2-dimensional) coordinate systems. The elements in \(\hat{G}(k,l,\theta)\) are given by
 \begin{equation}\label{eq:Givens_rotation_matrix}
 g_{ij}=\begin{cases}1,&i=j\notin\{k,l\} \\ \cos\theta,&i=j\in\{k,l\} \\ \sin\theta,&i=k,\,j=l \\ -\sin\theta,&i=l,\,j=k \\ 0,&otherwise\end{cases}
@@ -430,7 +440,7 @@ The full Jacobi-diagonalisation algorithm can be summaried as follows:
 \end{enumerate}
 
 \section{Method}
-\subsection{Analysing the buckling beam}
+\subsection{Testing The Machinery On The Buckling Beam}
 This first problem serves mainly as a test for both the Jacobi algorithm and the mathematical formalism developed in the theory section. The existence of simple analytic eigenvalues makes the problem an excellent starting point.
 
 Equation \eqref{eq:dimless_buckling_beam}, which governs the system, contains the second derivative operator \(\partial_\xi^2\). Employing the discretisation formalism yields the equation
@@ -441,34 +451,113 @@ However, by imposing the Dirichlet boundary conditions \(v_0=v_{n+1}=0\) it is a
 \begin{equation}\label{eq:method:buckling_beam}
 D\tilde{\vb{v}}=-\lambda\tilde{\vb{v}}
 \end{equation}
-where \(D\) is the symmetric tridiagonal matrix (without the \(h^2\) term) and \(\tilde{\vb{v}}=h^2\mqty(v_1&\cdots&v_n)^T\).
+where \(D\) is the symmetric tridiagonal matrix (without the \(h^2\) term), \(\tilde{\vb{v}}=h^2\mqty(v_1&\cdots&v_n)^T\) and the analytic eigenvalues \(-\lambda\) are given by equation \eqref{eq:tridiag_matrix_equation_eigenvalues}.
 
-Equation \eqref{eq:method:buckling_beam} is solved using the Jacobi algorithm for all combinations of \(\varepsilon\in\{10^{-4},10^{-6},10^{-8}\}\) and \(N_{\text{max}}\in\{10^1,10^2,10^3\}\). Our interest lies in the accuracy of the Jacobi algorithm, which is why \(\vb{v}\) will not be computed from \(\tilde{\vb{v}}\) after the algorithm has terminated (it simply scales the solutions). The plot of \(\tilde{\vb{v}}\) will be compared to the analytic sine solutions with \(A=1\) (as the eigenvectors are determined from \(\hat{I}\)).
+Equation \eqref{eq:method:buckling_beam} is solved using the Jacobi algorithm for all combinations of \(\varepsilon\in\{10^{-2},10^{-6},10^{-10}\}\) and \(n\in\{10,100,300\}\), where \(N_\text{max}\) is increased beyond the necessary amount of iterations. Our interest lies in the accuracy of the Jacobi algorithm. The simplest criteria to tell whether the algorithm is successful is to compare the eigenvalues to the analytic eigenvalues.
 
 In order to add an additional layer of confidence to the accuracy of the algorithm, the same system will be analysed using the \texttt{eig\_sym} function from the \texttt{Armadillo C++} library.
-\subsection{Analysing The Quantum Harmonic Oscillator Potential}
-Having completed a preliminary test of the algorithm.
+\subsection{Evaluating The Discrete Formalism Via The Quantum Harmonic Oscillator Potential}
+Having succesfully completed a preliminary test of the algorithm, the machinery is now put to work on the quantum harmonic oscillator system, i.e. equation \eqref{eq:dimless_radial_schrodinger_harmonic_oscillator}. Whereas the buckling beam system featured definite variable boundaries \(0\leq\xi\leq1\), the harmoni oscillator system does not: \(0\leq\xi<\infty\). Seeing that this is impossible to represent using a grid, infinity must be approximated by some upper boundary \(\xi_\infty\). The goal is to study how the discrete mathematics behaves with respect to the parameters \(\xi_\infty\) and \(n\). 
 
+To simplify the interpretations, the azimuthal quantum number is set to zero: \(\ell=0\). The remaining operators in \eqref{eq:dimless_radial_schrodinger_harmonic_oscillator} are thus the second derivative operator \(\partial_\xi^2\) and a multiplication-operator \(-\xi^2\). Employing the discretisation formalism yields:
+\begin{equation}\label{eq:discrete_dimless_harmonic_oscillator}
+\Big[\hat{\Lambda}_D+\hat{\Lambda}_g\Big]\vb{v}=-\lambda\vb{v}
+\end{equation}
+where \(g(\xi)=-\xi^2\). By imposing the boundary conditions \(v(0)=v(\xi_\text{upper})=0\), the first and final columns of \(\hat{\Lambda}_D\) is again found to be unecessary. The resulting tridiagonal matix may therefore be combined with \(\hat{\Lambda}_g\) (which is diagonal) to produce the tridiagonal matrix equation:
+\begin{equation}\label{eq:method:quantum_harmonic_oscillator}
+E\tilde{\vb{v}}=-\lambda\tilde{\vb{v}}
+\end{equation}
+where \(\tilde{\vb{v}}=h^2\mqty[v_1&\cdots&v_n]\) and \(E\) is a tridiagonal matrix whose coefficents are \(-2-h^2\xi_i^2\) along the central diagonal and 1 along both the upper and lower diagonals.
 
+The problem will be studied for all combinations of \(\xi_\infty\in\{0.5,1,1.5,2,4\}\) and \(n\in\{10,100,500\}\), where \(\varepsilon=10^{-8}\) and \(N_\text{max}\) is increased beyond the necessary amount of iterations. 
+\subsection{Applying The Machinery To The Electron-Electron System}
+As a final challenge, the machinery will now be put to use on the Coulomb-interacting electrons that are located in a harmonic oscillator potential. Seeing that the center-of-mass frame is essentially just the one-dimensional harmonic oscillator, the focus in this report will lie on the relative frame (i.e. equation \eqref{eq:dimless_two_particle_interaction}).
 
+Again the simplification \(\ell=0\) is assumed, meaning the remaining operators are: \(\partial_\rho^2\), \(-\omega^2\rho^2\) and \(-\rho^{-1}\), where \(\omega\) is a parameter. Once more infinity is approximated by some large value \(\rho_\infty\) such that the mathematical formalism yields:
+\begin{equation}\label{eq:discrete_dimless_interacting_electrons}
+\Big[\hat{\Lambda}_D+\hat{\Lambda}_{\tilde{g}}+\hat{\Lambda}_f\Big]\vb{v}=-\lambda\vb{v}
+\end{equation}
+where \(\tilde{g}(\rho)=-\omega_r^2\rho^2\) and \(f(\xi)=-\rho^{-1}\). Again \(\hat{\Lambda}_D\) may be simplified by imposing the boundary conditions \(v(0)=v(\rho_\text{upper})=0\), leading to the tridiagonal matrix
+\begin{equation}\label{eq:method:interacting_electrons}
+G\tilde{\vb{v}}=-\lambda\tilde{\vb{v}}
+\end{equation}
+where \(\tilde{\vb{v}}=h^2\mqty[v_1&\cdots&v_n]\) and \(G\) is a tridiagonal matrix whose coefficients are \(-2-h^2(\omega^2\rho^2+\rho^{-1})\) along the central diagonal and 1 along both the upper and lower diagonals.
 
-
-
-
-
-
-
-
-\clearpage
-
+The end-goal is study the balance between the Coulomb-interaction and the harmonic oscillator potential: while the Coulomb potential repels the electrons, the harmonic oscillator potential centers the electrons about the origin, thereby forcing them closer together. This balance will be studied via the parameter \(\omega\in\{\}\). Other parameters used in the program include \(n=300\), \(\varepsilon=10^{-8}\), sufficient \(N_\text{max}\) and a sufficient \(\rho_\infty\). \footnote{The use of ``sufficient'' here implies that the parameter is determined such that it has no affect on the results.} In order to gain some insight from the results, the resulting probability distributions \(p(\rho)=|v(\rho)|^2\) will be compared. However, to avoid unecessary confusion with the energy, only the ground state will be analysed.
 \section{Results}
+For the sake of not included 10 identical figures, only a handful of the prepared figures are featured. All figures, along with all other material, are available on at the github address:\\
+{\scriptsize\url{https://github.com/njmikkelsen/comphys2018/tree/master/Project2}}
+\subsection{The Buckling Beam}
+A clear trend revealed itself whilst studying this system: the Jacobi algorithm is slow, however accurate. Moreover, it's accuracy is dependent on a sufficient user-defined tolerance \(\varepsilon\). Figure \ref{fig:bucklingbeam_eigenvectors1} shows an example with \(n=100\) and an error tolerence of only \(\varepsilon=10^{-2}\): the resulting eigenvector becomes terribly off. As long as the user is aware of this potential pitfall, this is not necessarily a big problem. Figure \ref{fig:bucklingbeam_eigenvectors2} shows another example with \(n=100\), however now with \(\varepsilon=10^{-10}\): the eigenvector comes out as expected.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.275]{BucklingBeam/plots/vector100_2.png}
+\caption{Some eigenvectors of the Buckling Beam system. The numerical calculation defined \(n=100\) and \(\varepsilon=10^{-2}\).}
+\label{fig:bucklingbeam_eigenvectors1}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.275]{BucklingBeam/plots/vector100_10.png}
+\caption{Some eigenvectors of the Buckling Beam system. The numerical calculation defined \(n=100\) and \(\varepsilon=10^{-2}\).}
+\label{fig:bucklingbeam_eigenvectors2}
+\end{figure}
 
-
+While some of the eigenvectors in computations with large \(\varepsilon\) turned out completely wrong, the eigenvalues matched the analytic eigenvalues very well in almost every computation. Table \ref{tab:bucklingbeam_MSE} shows a Mean Square Error (MSE) score for every computation: most notably there are no immediately critical errors. \texttt{armadillo} performs especially impressive with zero error within the specified precision, Jacobi performs also quite well.
+\begin{table}[h]
+\centering
+\caption{Mean Square Error score for both the Jacobi-calculated eigenvalues and the \texttt{armadillo}-calculated eigenvalues for every computation of the Buckling Beam system. The figures have been truncated due to uneccesary precision.}\label{tab:bucklingbeam_MSE}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\(n\) & \(\varepsilon\) & Jacobi MSE             & \texttt{armadillo} MSE \\\hline
+10    & \(10^{-2}\)     & \(1.34\cdot10^{-7}\)   & 0                      \\\hline
+10    & \(10^{-6}\)     &  0                     & 0                      \\\hline
+10    & \(10^{-10}\)    &  0                     & 0                      \\\hline
+100   & \(10^{-2}\)     &  \(9.17\cdot10^{-4}\)  & 0                      \\\hline
+100   & \(10^{-6}\)     &  \(1.00\cdot10^{-20}\) & 0                      \\\hline
+100   & \(10^{-10}\)    &  0                     & 0                      \\\hline
+300   & \(10^{-2}\)     &  \(6.82\cdot10^{-3}\)  & 0                      \\\hline
+300   & \(10^{-6}\)     &  \(1.02\cdot10^{-16}\) & 0                      \\\hline
+300   & \(10^{-10}\)    &  0                     & 0                      \\\hline
+\end{tabular}
+\end{table}
+\subsection{The Harmonic Oscillator}
+The importance of choosing an appropriate approximation of infinity can be summaried by figures \ref{fig:harmonicoscillator_eigenvectors1} and \ref{fig:harmonicoscillator_eigenvectors2}: While the major shape is conserved, the curvature of the wave functions are very distorted in figure \ref{fig:harmonicoscillator_eigenvectors1}. Figure \ref{fig:harmonicoscillator_eigenvectors2} on the other hand is much more generous with its infinity and yields therefore much more accurate results. One detail that is particulary noticeable between the two is the maximum height of the wave functions. Whereas all wave functions are more or less equally tall in figure \ref{fig:harmonicoscillator_eigenvectors1}, there is a clear difference between the different concentrations in figure \ref{fig:harmonicoscillator_eigenvectors2}.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.27]{HarmonicOscillator/plots/wavefunction80_1.png}
+\caption{The first wavefunctions of the radial quantum harmonic oscillator. Here, infinity is approximated by \(\xi_\infty=0.1\).}
+\label{fig:harmonicoscillator_eigenvectors1}
+\end{figure}
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.27]{HarmonicOscillator/plots/wavefunction80_4.png}
+\caption{The first wavefunctions of the radial quantum harmonic oscillator. Here, infinity is approximated by \(\xi_\infty=0.4\).}
+\label{fig:harmonicoscillator_eigenvectors2}
+\end{figure}
+\subsection{The Coulomb-Interacting Electron-Electron Harmonic Oscillator}
+The effect of adjusting the harmonic oscillator frequency is immediately obvious from figures \ref{fig:interactingelectrons_eigenvectors1}, \ref{fig:interactingelectrons_eigenvectors2} and \ref{fig:interactingelectrons_eigenvectors3}: Increasing the frequency, which leads to a relative decrease in the repulsive Coulomb interaction, yields a concentration of the electrons. This is not surprising as there are only potentials working against each other: the Coulomb-interaction trying to pull the electrons a part, and the harmonic oscillator trying to concentrate the electrons about a common center. The relative increase in the strength of the harmonic oscillator is therefore expected to lead to a greater probability concentration closer to the origin.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.275]{InteractingElectrons/plots/prob200_1.png}
+\caption{The radial ground state of the Coulomb-interacting electron-electron quantum harmonic oscillator. Here, infinity is approximated by \(\xi_\infty=0.2\) and the harmonic oscillator frequency is \(\omega=0.1\).}
+\label{fig:interactingelectrons_eigenvectors1}
+\end{figure}
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.275]{InteractingElectrons/plots/prob200_10.png}
+\caption{The radial ground state of the Coulomb-interacting electron-electron quantum harmonic oscillator. Here, infinity is approximated by \(\xi_\infty=0.2\) and the harmonic oscillator frequency is \(\omega=1.0\).}
+\label{fig:interactingelectrons_eigenvectors2}
+\end{figure}
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.275]{InteractingElectrons/plots/prob200_50.png}
+\caption{The radial ground state of the Coulomb-interacting electron-electron quantum harmonic oscillator. Here, infinity is approximated by \(\xi_\infty=0.2\) and the harmonic oscillator frequency is \(\omega=2.5\).}
+\label{fig:interactingelectrons_eigenvectors3}
+\end{figure}
 \section{Discussion}
 
 
 \section{Conclusion}
-
 
 \nocite{lecture_ode}\nocite{lecture_linalg}
 \bibliographystyle{plain}
