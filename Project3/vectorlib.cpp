@@ -89,6 +89,18 @@ double Vector::norm () const {
   return pow(norm,0.5);
 };
 
+double Vector::norm_2 () const {
+  double norm_2 = 0.0;
+  for (int i=0; i<dim; i++) {norm_2 += data[i]*data[i];};
+  return norm_2;
+};
+
+double Vector::dot (const Vector& V) const {
+  double dot = 0.0;
+  for (int i=0; i<dim; i++) {dot += data[i]*V(i);};
+  return dot;
+};
+
 /*
 -------------------------------------
        Vector Class Operations
@@ -131,6 +143,14 @@ Vector operator / (const Vector& V1, const Vector& V2) {
     for (int i=0; i<V1.get_dim(); i++) {V3(i) = V1(i)/V2(i);};
     return V3;
   } else {return 0;};
+};
+
+Vector operator % (const Vector& V1, const Vector& V2) {
+  Vector V3(3);
+  V3(0) = V1(2)*V2(3)-V1(3)*V2(2);
+  V3(1) = V1(3)*V2(1)-V1(1)*V2(3);
+  V3(2) = V1(1)*V2(2)-V1(2)*V2(1);
+  return V3;
 };
 
 Vector operator + (const Vector& V, double c) {

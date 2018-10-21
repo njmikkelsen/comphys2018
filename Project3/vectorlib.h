@@ -38,7 +38,9 @@ class Vector {
     Vector& operator *= (const Vector& V);
     Vector& operator /= (const Vector& V);
     // additional operations
-    double norm () const;
+    double norm   ()                const;
+    double norm_2 ()                const;
+    double dot    (const Vector& V) const;
 };
 
 class TimeVector {
@@ -68,6 +70,7 @@ Vector operator + (const Vector& V1, const Vector& V2);
 Vector operator - (const Vector& V1, const Vector& V2);
 Vector operator * (const Vector& V1, const Vector& V2);
 Vector operator / (const Vector& V1, const Vector& V2);
+Vector operator % (const Vector& V1, const Vector& V2);  // vector cross-product, assumes dim=3
 // scalar operations
 Vector operator + (const Vector& V, double c);
 Vector operator - (const Vector& V, double c);
@@ -77,5 +80,6 @@ Vector operator + (double c, const Vector& V);
 Vector operator - (double c, const Vector& V);
 Vector operator * (double c, const Vector& V);
 Vector operator / (double c, const Vector& V);
+
 
 #endif

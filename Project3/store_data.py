@@ -22,5 +22,5 @@ with open(path,'r') as datafile:
     v[i] = np.array(line[3:6])
 
 # save data as a NumPy file
-np.save(directory+"/"+filename,[r,v])
+np.save("./results/"+directory+"/"+filename,[r,v])
 

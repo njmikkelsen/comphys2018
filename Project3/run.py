@@ -9,5 +9,5 @@ print("Running executable...\n")
 os.system("./test.x")
 
 print("Plotting results...")
-os.system("python3 store_data.py The Solar System/Earth.dat")
-os.system("python3 plot_data.py The Solar System/Earth.npy")
+os.system("python3 store_data.py results/The Solar System/Earth.dat")
+os.system("python3 plot_data.py results/The Solar System/Earth.npy")

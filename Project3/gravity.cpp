@@ -101,9 +101,14 @@ void DynamicBody::prepare_integration (int N) {
 --------------------------------------
 */
 
-GravitySystem::GravitySystem (string sysname, double G) {
+GravitySystem::GravitySystem (string sysname, bool SI_units) {
+  G  = 6.67408e-11;      // m^3 kg^-1 s^-2
+  c  = 299792458.;       // m s^-1
+  au = 149597870700.;    // m
+  yr = 365.25*24*60*60;  // s
+  if (SI_units) {SI();}
+  else          {AU();};
   sysname_ = sysname;
-  G_       = G;
   run_     = false;
   ready_   = false;
   N_tot    = 0;
@@ -111,11 +116,28 @@ GravitySystem::GravitySystem (string sysname, double G) {
   N_sta    = 0;
   N_int    = 0;
   dt_      = 0;
+  beta_    = 2;
+  gravity  = &GravitySystem::beta_gravity;
+};
+
+void GravitySystem::SI () {
+  G_ = G;
+  c_ = c;
+};
+
+void GravitySystem::AU () {
+  G_  = 39.47841760435743;  // 4pi^2
+  c_  = c*yr/au;
 };
 
 GravitySystem::~GravitySystem () {
-  sysname_ = "";
+  G        = 0;
+  c        = 0;
+  au       = 0;
+  yr       = 0;
   G_       = 0;
+  c_       = 0;
+  sysname_ = "";
   run_     = false;
   ready_   = false;
   N_tot    = 0;
@@ -127,11 +149,12 @@ GravitySystem::~GravitySystem () {
   Bodies.clear();
 };
 
-string GravitySystem::sysname   () {return sysname_;};
-double GravitySystem::G         () {return G_;};
-int    GravitySystem::N         () {return N_tot;};
-int    GravitySystem::N_dynamic () {return N_dyn;};
-int    GravitySystem::N_static  () {return N_sta;};
+string GravitySystem::sysname       () {return sysname_;};
+double GravitySystem::gravity_const () {return G_;};
+double GravitySystem::light_speed   () {return c_;};
+int    GravitySystem::N             () {return N_tot;};
+int    GravitySystem::N_dynamic     () {return N_dyn;};
+int    GravitySystem::N_static      () {return N_sta;};
 
 void GravitySystem::print_info (int precision) {
   ios_base::fmtflags f(cout.flags());
@@ -212,6 +235,16 @@ void GravitySystem::switch_status (string name) {
   };
 };
 
+void GravitySystem::adjust_gravity (double beta) {
+  gravity = &GravitySystem::beta_gravity;
+  beta_   = beta;
+};
+
+void GravitySystem::relativistic_effects () {
+  gravity = &GravitySystem::relativistic_gravity;
+  beta_   = 2;
+};
+
 void GravitySystem::setup_integration (int N, double dt) {
   ready_ = true;
   N_int  = N;
@@ -231,7 +264,7 @@ void GravitySystem::run (string integration) {
       if (integration!="Verlet") {cout << "Invalid integration scheme! Using 'Verlet'." << endl;};
       step        = &GravitySystem::Verlet;
       Vector* POS = positions(0);
-      g_Verlet    = gravity(POS);
+      g_Verlet    = (this->*gravity)(0,POS);
     };
     // integration
     t_0 = clock();
@@ -252,7 +285,16 @@ Vector* GravitySystem::positions (int i) {
   return POS;
 };
 
-Vector* GravitySystem::gravity (Vector* POS) {
+Vector* GravitySystem::velocities (int i) {
+  Vector* VEL = new Vector [N_tot];
+  for (int j=0; j<N_tot; j++) {
+    VEL[j].init(3);
+    VEL[j] = (*Bodies[j])[i];
+  };
+  return VEL;
+};
+
+Vector* GravitySystem::beta_gravity (int i, Vector* POS) {
   Vector* g = new Vector [N_dyn];
   Vector dr(3,0);
   double dr_ = 0;
@@ -263,7 +305,7 @@ Vector* GravitySystem::gravity (Vector* POS) {
       if (k!=l) {
         dr    = POS[k]-POS[l];
         dr_   = dr.norm();
-        g[j] += (*Bodies[k]).mass()*dr/(dr_*dr_*dr_);
+        g[j] += (*Bodies[k]).mass()*dr/pow(dr_,beta_+1);
       };
     };
     g[j] *= G_*(*Bodies[l]).mass();
@@ -271,9 +313,19 @@ Vector* GravitySystem::gravity (Vector* POS) {
   return g;
 };
 
+Vector* GravitySystem::relativistic_gravity (int i, Vector* POS) {
+  Vector* g   = beta_gravity(i,POS);
+  Vector* VEL = velocities(i);
+  for (int j=0; j<N_dyn; j++) {
+    int k  = idx_dyn[j];
+    g[j]  *= 1 + 3*(POS[k]%VEL[k]).norm_2()/(POS[k].norm_2()*c_*c_);
+  };
+  return g;
+};
+
 void GravitySystem::Euler (int i) {
   Vector* POS = positions(i);
-  Vector* g   = gravity(POS);
+  Vector* g   = (this->*gravity)(i,POS);
   for (int j=0; j<N_dyn; j++) {
     int k             = idx_dyn[j];
     (*Bodies[k])(i+1) = (*Bodies[k])(i) + dt_*(*Bodies[k])[i];  // update position
@@ -289,7 +341,7 @@ void GravitySystem::Verlet (int i) {
   };
   // update velocity
   Vector* POS = positions(i+1);
-  Vector* g   = gravity(POS);
+  Vector* g   = (this->*gravity)(i,POS);
   for (int j=0; j<N_dyn; j++) {
     int k             = idx_dyn[j];
     (*Bodies[k])[i+1] = (*Bodies[k])[i] + 0.5*dt_*(g_Verlet[j]+g[j]);
@@ -299,11 +351,11 @@ void GravitySystem::Verlet (int i) {
 
 void GravitySystem::write_results (int precision) {
   // create/overwrite folder
-  int success = system(("python3 prepare_folder.py '"+sysname_+"'").c_str());
+  int success = system(("python3 prepare_folder.py '" + sysname_+"'").c_str());
   if (success < 0) {
     cout << "Error! Filed to run python script 'prepare_folder.py'" << endl;
   } else {
-    string dirpath = sysname_ + "/";
+    string dirpath = "./results/" + sysname_ + "/";
     // write general results
     ofstream   File_g(dirpath + "general.dat");
     streambuf* coutbuf = cout.rdbuf();  // save cout buf
