@@ -18,13 +18,11 @@ class Vector {
     double* data;
   public:
     // constructors and destructor
-    Vector  ();
-    Vector  (int n);
-    Vector  (int n, double* value);
-    Vector  (const Vector& copy);
-    ~Vector ();
-    
-    void init (int n);
+    Vector     ();
+    void init  (int n, double c=0);
+    Vector     (int n, double c=0);
+    Vector     (const Vector& copy);
+    ~Vector    ();
     // misc
     int     get_dim    () const;
     double* get_vector () const;
@@ -50,6 +48,8 @@ class TimeVector {
     Vector* timedata;
   public:
     // constructors and destructors
+    TimeVector  ();
+    void init   (int d, int n);
     TimeVector  (int d, int n);
     ~TimeVector ();
     // misc

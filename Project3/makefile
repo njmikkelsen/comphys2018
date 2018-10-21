@@ -1,8 +1,8 @@
 # parameters
 CXX      = g++ -std=c++14
 CXXFLAGS = -Wall -O3
-DEPS     = vectorlib.h
-OBJ      = test.o vectorlib.o
+DEPS     = vectorlib.h gravity.h
+OBJ      = vectorlib.o gravity.o test.o
 LIBS     = 
 
 # make object files

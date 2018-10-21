@@ -1,20 +1,31 @@
-#include "vectorlib.h"
+#include "gravity.h"
 
 int main () {
   
-  Vector a(3);
-  for (int i=0; i<3; i++) {a(i) = i*i-1;};
+  GravitySystem SolarSystem ("The Solar System");
   
-  TimeVector A (3,4);
-  for (int i=0; i<A.get_len(); i++) {A(i) = a+i;};
+  Vector zero(3,0);
+  Vector r0(3,0);
+  Vector v0(3,0);
   
-  a.print("a");
-  A(2).print("A(2)");
+  // parameters
+  int    N  = 500;
+  double dt = 5e-2;
+  double x0 = 1;
+  double v  = 1.2e0;
   
-  Vector b = a;
-  b /= A(2);
+  r0(0) = x0;
+  v0(1) = v;
   
-  b.print("b");
+  SolarSystem.add_body("The Sun", 1.0000000e+0,zero,zero,false);
+  SolarSystem.add_body("Earth",   3.0024584e-6,r0,v0);
+  
+  SolarSystem.setup_integration(N,dt);
+  SolarSystem.run("Verlet");
+  
+  
+  SolarSystem.write_results();
+  
   
   return 0;
 };

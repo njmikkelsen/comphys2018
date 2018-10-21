@@ -10,14 +10,16 @@ Vector::Vector () {
   dim  = 0;
 };
 
-void Vector::init (int n) {
+void Vector::init (int n, double c) {
   dim  = n;
   data = new double [n];
+  for (int i=0; i<n; i++) {data[i] = c;};
 };
 
-Vector::Vector (int n) {
+Vector::Vector (int n, double c) {
   dim  = n;
   data = new double [n];
+  for (int i=0; i<n; i++) {data[i] = c;};
 };
 
 Vector::Vector (const Vector& copy) {
@@ -176,6 +178,18 @@ Vector operator / (double c, const Vector& V) {
           TimeVector Class
 --------------------------------------
 */
+
+TimeVector::TimeVector () {
+  dim      = 0;
+  N        = 0;
+};
+
+void TimeVector::init (int d, int n) {
+  dim      = d;
+  N        = n;
+  timedata = new Vector [n];
+  for (int i=0; i<n; i++) {timedata[i].init(d);};
+};
 
 TimeVector::TimeVector (int d, int n) {
   dim      = d;
