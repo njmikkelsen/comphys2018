@@ -298,17 +298,17 @@ Vector* GravitySystem::beta_gravity (int i, Vector* POS) {
   Vector* g = new Vector [N_dyn];
   Vector dr(3,0);
   double dr_ = 0;
-  for (int j=0; j<N_dyn; j++) {
+  for (int j=0; j<N_dyn; j++) {   // cycle through each dynamic body
     int l = idx_dyn[j];
     g[j].init(3);
-    for (int k=0; k<N_tot; k++) {
+    for (int k=0; k<N_tot; k++) {   // cycle through all bodies
       if (k!=l) {
         dr    = POS[k]-POS[l];
         dr_   = dr.norm();
         g[j] += (*Bodies[k]).mass()*dr/pow(dr_,beta_+1);
       };
     };
-    g[j] *= G_*(*Bodies[l]).mass();
+    g[j] *= G_;
   };
   return g;
 };
@@ -373,7 +373,7 @@ void GravitySystem::write_results (int precision) {
       int k = idx_dyn[i];
       ofstream File(dirpath + Bodies[k]->name() + ".dat");
       File << showpos << setprecision(precision) << scientific;
-      for (int j=0; j<N_int; j++) {
+      for (int j=0; j<N_int+1; j++) {
         File << (*Bodies[k])(j)(0) << "  " << (*Bodies[k])(j)(1) << "  "  << (*Bodies[k])(j)(2) << "  ";
         File << (*Bodies[k])[j](0) << "  " << (*Bodies[k])[j](1) << "  "  << (*Bodies[k])[j](2) << endl;
       };
@@ -391,16 +391,4 @@ void GravitySystem::write_results (int precision) {
     File_s.close();
   };
 };
-
-
-
-
-
-
-
-
-
-
-
-
 

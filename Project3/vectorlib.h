@@ -37,6 +37,10 @@ class Vector {
     Vector& operator -= (const Vector& V);
     Vector& operator *= (const Vector& V);
     Vector& operator /= (const Vector& V);
+    Vector& operator += (double c);
+    Vector& operator -= (double c);
+    Vector& operator *= (double c);
+    Vector& operator /= (double c);
     // additional operations
     double norm   ()                const;
     double norm_2 ()                const;

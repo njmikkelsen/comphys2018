@@ -66,6 +66,26 @@ Vector& Vector::operator /= (const Vector& V) {
   return *this;
 };
 
+Vector& Vector::operator += (double c) {
+  for (int i=0; i<dim; i++) {data[i] += c;};
+  return *this;
+};
+
+Vector& Vector::operator -= (double c) {
+  for (int i=0; i<dim; i++) {data[i] -= c;};
+  return *this;
+};
+
+Vector& Vector::operator *= (double c) {
+  for (int i=0; i<dim; i++) {data[i] *= c;};
+  return *this;
+};
+
+Vector& Vector::operator /= (double c) {
+  for (int i=0; i<dim; i++) {data[i] /= c;};
+  return *this;
+};
+
 void Vector::print (string name, int precision) const {
   ios_base::fmtflags f(cout.flags());
   cout.flags(f);
@@ -174,9 +194,9 @@ Vector operator - (double c, const Vector& V) {
 };
 
 Vector operator * (const Vector& V, double c) {
-  Vector cxV(V.get_dim());
-  for (int i=0; i<V.get_dim(); i++) {cxV(i) = c*V(i);};
-  return cxV;
+  Vector Vxc(V.get_dim());
+  for (int i=0; i<V.get_dim(); i++) {Vxc(i) = V(i)*c;};
+  return Vxc;
 };
 
 Vector operator * (double c, const Vector& V) {return V*c;};
