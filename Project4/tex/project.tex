@@ -47,20 +47,77 @@
 hello
 \end{abstract}
 \maketitle
-
-All material for project 4 may be found at:\\
+All material written for project 4 may be found at:\\
 {\scriptsize\url{https://github.com/njmikkelsen/comphys2018/tree/master/Project4}}
-
-The original project description was accessed via the following link: \cite{project}\\
-{\scriptsize\url{http://compphysics.github.io/ComputationalPhysics/doc/Projects/2018/Project4/pdf/Project4.pdf}}
-
 \section{Introduction}
 \section{Theory}
-
-
 \subsection{Thermodynamics}
+The following theory is based on the FYS 3150 lectures on statistical physics \cite{statphys}, in addition to the online version of Harvey Gould and Jan Tobochnik's \emph{Thermal and Statistical Physics} \cite{thermal_and_stat} (chapter 5 in particular).
 \subsubsection{Fundamentals}
-\subsubsection{The Ising Model}
+The theory of thermodynamics is based on the statistical notion that the macrosopic properties of a thermodynamic system is fundamentally rooted in the configurations of microsopic properties. More formally, assuming that a system may be decomposed into a strict set of degrees of freedom, a unique configuration of these degrees constitutes what is known as a \emph{microstate}. The fundamental assumption of thermodynamics, and statistical physics in general, is that the probability of finding the system in any of its available microstates is uniform. The generalised properties of a unique microstate, say the number of up-spins in a string of spin-1/2 electrons, is known as the system's \emph{macrostate}. Several microstates may share a common macrostate, thus leading to a statistical distribution in the system's macrostates. It therefore follows that macroscopic properties such as temperature, pressure, etc., stems from the underlying distributions of micro- and macrostates.
+
+A fundamental property of a themodynamic system is the total number of available states \(\Omega\), whose numerical value is often ridiculously large.  It's importance relates to the fundamental assumption of the uniform propbability distribution between microstates: \(P_i=1/\Omega\) (here \(i\) denotes an arbitrary microstate). This expression leads to another, arguebly more important, fundamental quantity known as entropy:
+\begin{equation}\label{eq:Entropy}
+S=-k_B\sum_iP_i\log P_i=k_B\log\Omega
+\end{equation}
+where \(k_B\) is the Boltzmann constant and the second equation applies \(P_i=1/\Omega\). The importance of entropy is most visible in its relation to the famous \emph{Second Law of Thermodynamics} (2LT), which states that the entropy of an isolated system tends to increase:
+\begin{equation}\label{eq:Second_Law_of_Thermodynamics}
+\dd{S}=\frac{\dd{Q}}{T}\geq0
+\end{equation}
+Here, \(\dd{S}\) is the infinitesimal increase in \(S\) due to an infinitesimal exchange of heat \(Q\) between a system an it's surroundings at temperature \(T\).
+\subsubsection{Some selected thermodynamic quantities}
+This project will only consider the so-called \emph{canonical ensemble}. In this context, an ensemble, or a \emph{statistical ensemble}, is a large collection of ideal and identical microsystems that exist is some form of statistical equilibrium. The canonical ensemble is a particular ensemble in which the system is in thermal equilibrium with its surroundings. It can be shown that such systems behave according to the Boltzmann distribution, which is a probability distribution governing the probability of finding the system with a specific energy \(\epsilon\), provided temperature \(T\):
+\begin{equation}\label{eq:Boltzmann_Distribution}
+P(\epsilon)=\frac{1}{Z}e^{-\epsilon/k_BT}
+\end{equation}
+Here, \(k_B\) is the Boltzmann constant and \(Z\) is the so-called partition function:
+\begin{equation}\label{eq:Partition_Function}
+Z=\sum_ie^{-\epsilon_i/k_BT}
+\end{equation}
+A common practice is to introduce the substitution \(\beta=1/k_BT\), simplifying both analytics and computations. One of the properties of the canonical ensemble is its drive to minimise the Helmholtz free energy:
+\begin{equation}\label{eq:Helmholtz_Free_Energy}
+F=U-TS
+\end{equation}
+where \(U=\expval{\epsilon}\) is the system's internal energy. The Helmoholtz free energy describes the eternal conflict between entropy's tendency to increase and the principle of energy minimisation.
+
+While thermodynamics deserves a more in-depth treatment, this would only be superfluous in this report. The final parts of this section will therefore introduce dome thermodynamic quantities without a strict derivation.
+
+The first and second moments of \(\epsilon\) are given by:
+\begin{subequations}
+\begin{align}
+\expval{\epsilon}  &=\sum_i\epsilon_iP_i=\frac{1}{Z}\sum_i\epsilon_ie^{-\beta\epsilon_i}\\
+\expval{\epsilon^2}&=\sum_i\epsilon_i^2P_i=\frac{1}{Z}\sum_i\epsilon_i^2e^{-\beta\epsilon_i}
+\end{align}
+\end{subequations}
+such that the variance of \(\epsilon\) is given by \(\text{Var}[\epsilon]=\expval{\epsilon^2}-\expval{\epsilon}^2\). The energy-variance is particularly important as it is proportional to the system's heat capacity at constant volume:
+\begin{equation}
+C_V=\frac{\text{Var}[\epsilon]}{k_BT^2}=\frac{1}{k_BT^2}\big(\expval{\epsilon^2}-\expval{\epsilon}^2\big)
+\end{equation}
+
+Furthermore, consider a system composed of spin-1/2 particles that is subjected to an external magnetic field \(\vb{B}=B\hat{\vb{z}}\) such that the energy-interaction between a particle and the field is
+\begin{equation}
+E_B=-\boldsymbol{\mu}\cdot\vb{B}=-\mu_zB
+\end{equation}
+where \(\boldsymbol{\mu}=(\mu_x,\mu_y,\mu_z)\) is the particle's magnetic moment. To simplify notation, introduce: \(\mu_z=s\mu\) where \(s=\pm1\) indicates spin-up or spin-down. The net magnetisation of the complete system is then
+\begin{equation}
+\mathcal{M}=\mu M=\mu\sum_is_i
+\end{equation}
+where \(M\) is the net number of spin-up particles. The first and second moments of \(M\) are given by:
+\begin{subequations}
+\begin{align}
+\expval{M}  &=\sum_iM_iP_i=\frac{1}{Z}\sum_iM_ie^{-\beta\epsilon_i}\\
+\expval{M^2}&=\sum_iM_i^2P_i=\frac{1}{Z}\sum_iM_i^2e^{-\beta\epsilon_i}
+\end{align}
+\end{subequations}
+such that the variance of \(M\) is given by \(\text{Var}[M]=\expval{M^2}-\expval{M}^2\). Much like how heat capacity is proportional to the energy-variance, the magnetic susceptibility \(\chi\) is proportional to the variance of the net-spin \(M\):
+\begin{equation}
+\chi=\frac{\text{Var}[M]}{k_BT}=\frac{1}{k_BT}\big(\expval{M^2}-\expval{M}^2\big)
+\end{equation}
+
+\subsection{The Ising Model}
+\subsubsection{•}
+
+
 
 \subsection{Numerical Simulations}
 \subsubsection{Monte Carlo Integration}
@@ -93,7 +150,7 @@ The original project description was accessed via the following link: \cite{proj
 
 
 \bibliographystyle{plain}
-\bibliography{}
+\bibliography{references.bib}
 
 
 
