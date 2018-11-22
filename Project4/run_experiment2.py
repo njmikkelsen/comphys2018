@@ -15,7 +15,7 @@ the Metropolis algorithm. The simulation is coded in the c++ file "experiment2.c
 datafile_noext  = "./output/experiment_data/experiment2"  # filename without extension for experiment data
 file_extension  = ".dat"    # extension for datafile
 N_MC            = int(1e6)  # number of Monte Carlo cycles
-run_experiments = True      # whether to perform the experiments before plotting results
+run_experiments = False     # whether to perform the experiments before plotting results
 
 # different tempeatures to use in simulation
 temperature = [1.0,1.7,2.4]
@@ -35,10 +35,11 @@ N    = np.linspace(1,N_MC,N_MC).astype(np.float_)
 
 # experiments
 for i,T in enumerate(temperature):
+  path_order    = datafile_noext + "_{:d}_{:f}".format(N_MC,T) + "_order"    + file_extension
+  path_disorder = datafile_noext + "_{:d}_{:f}".format(N_MC,T) + "_disorder" + file_extension
+
   # run experiment
   if run_experiments:
-    path_order    = datafile_noext + "_{:d}_{:f}".format(N_MC,T) + "_order"    + file_extension
-    path_disorder = datafile_noext + "_{:d}_{:f}".format(N_MC,T) + "_disorder" + file_extension
     os.system("./run.x {:s} {:f} {:f} true".format( path_order,   T,N_MC))
     os.system("./run.x {:s} {:f} {:f} false".format(path_disorder,T,N_MC))
 
@@ -51,10 +52,10 @@ for i,T in enumerate(temperature):
 figs = [plt.figure() for _ in range(6)]
 axes = [fig.add_subplot(111) for fig in figs]
 
-for ax in axes:
+for ax in axes[:-1]:
   ax.set_xlabel("number of Monte Carlo cycles")
   ax.set_xscale("log")
-  #ax.set_yscale("log")
+axes[5].set_xlabel("number of Monte Carlo cycles")
 
 cm     = plt.get_cmap('gist_rainbow')
 colors = [cm(1.*i/len(temperature)) for i in range(len(temperature))]
@@ -75,7 +76,7 @@ for i,T in enumerate(temperature):
   axes[5].plot(N,A[   1,i,1:],color=colors[i],linestyle='--',linewidth=0.7,label="T = {:3.1f} disorder".format(T))
 
 for ax in axes: ax.legend(loc='best')
-axes[5].set_yscale("log")
+#axes[5].set_yscale("log")
 
 axes[0].set_title("evolution of expected energy")
 axes[1].set_title("evolution of expected energy squared")

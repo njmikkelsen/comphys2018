@@ -14,32 +14,28 @@ using namespace std;
 inline int periodic(int i, int limit, int add) {return (i+limit+add) % (limit);};
 
 int main (int argc, char* argv[]) {
-  
-  // program parameters
-  int     L = 2;        // lattice dimensions
-  double  T = 1.0;      // temperature [kT/J]
-  int     N;            // number of simulations
-  int *   N_MC;         // array of number of Monte Carlo cycles per simulation
-  double  beta = 1./T;  // inverse temperature parameter
-  string  outfile;      // path to output file (read from command line)
-  
-    
-  // read command line arguments
-  if (argc>1) {
-    outfile = argv[1];
-    N       = argc-2;
-    N_MC    = new int [N];
-    for (int i=0; i<N; i++) {
-      N_MC[i] = atoi(argv[i+2]);
-    };
-  } else {
+
+  if (argc<6) {
     cout << "Error: Missing command line arguments" << endl;
     return 1;
   };
   
-  // precompute exponentials
-  double * dE = new double [17];
-  for (int deps=-8; deps<=8; deps+=4) {dE[deps+8] = exp(-deps*beta);};
+  // program parameters
+  string outfile;     // output filename
+  int      L;         // lattice dimensions
+  int      N_T;       // number of temperatures
+  double * T;         // temperature [kT/J]
+  int      N_BurnIn;  // number of Monte Carlo cycles to burn in
+  int      N_MC;      // number of Monte Carlo cycles to use for integration
+  
+  // read command line arguments
+  outfile  = argv[1];
+  L        = atoi(argv[2]);
+  N_BurnIn = atoi(argv[3]);
+  N_MC     = atoi(argv[4]);
+  N_T      = argc-5;
+  T        = new double [N_T];
+  for (int i=0; i<N_T; i++) {T[i] = atof(argv[i+5]);};
   
   // setup uniform distribution
   random_device rd;
@@ -47,27 +43,29 @@ int main (int argc, char* argv[]) {
   uniform_real_distribution<double> uniform(0.0,1.0);
   
   // open output file
-  ofstream File(outfile);
-  File << "# Experiment 1" << endl;
+  ofstream File(outfile);   
+  File << "# Experiment 4 non-parallel" << endl;
   File << setprecision(16) << scientific;
-  int int_width = ((int)(log10(*max_element(N_MC,N_MC+N)))+1);
   
   // print initial message
-  cout << "Running " << N << " Monte Carlo experiments for the " << L << " x " << L << " system with:" << endl;
-  cout << "  temperature  = " << T << endl;
-  cout << "  total #spins = " << L*L << endl;
-  cout << "-----------------------------------------" << endl;
-  cout << "Expectation values per spin:" << endl;
+  cout << "Running " << N_T << " Monte Carlo experiments for " << L << " x " << L << " system with:" << endl;
+  cout << "  #burn-in cycles = " << N_BurnIn << endl;
+  cout << "  #MC cycles      = " << N_MC     << endl;
+  cout << "  total #spins    = " << L*L      << endl;
+  cout << "--------------------------------------------------------------------" << endl;
   
   // master loop - repeated experiments w/ different N_MC
-  for (int experiment=0; experiment<N; experiment++) {
-  
+  for (int experiment=0; experiment<N_T; experiment++) {
+    
     // print initial experiment message
-    cout << endl;
-    cout << "experiment (" << experiment+1 << "/" << N << ")" << endl;
-  
+    cout << "experiment (" << experiment+1 << "/" << N_T << ")" << endl;
+    
+    // precompute exponentials
+    double * dE = new double [17];
+    for (int deps=-8; deps<=8; deps+=4) {dE[deps+8] = exp(-deps/T[experiment]);};
+    
     // init Monte Carlo integrals
-    double norm   = 1./((double)N_MC[experiment]);
+    double norm   = 1./((double)(N_MC));
     double avg_E  = 0;
     double avg_E2 = 0;
     double abs_M  = 0;
@@ -87,12 +85,35 @@ int main (int argc, char* argv[]) {
         E -= (double)state[i][j] * (state[periodic(i,L,-1)][j] + state[i][periodic(j,L,-1)]);
       };
     };
+
+    // run Metropolis burn-in
+    for (int cycle=0; cycle<N_BurnIn; cycle++) {
+      // sweep over every point on the lattice
+      for (int x=0; x<L; x++) {
+        for (int y=0; y<L; y++) {
+          // propose a random spin to flip
+          int i = (int) (uniform(gen)*(double)L);
+          int j = (int) (uniform(gen)*(double)L);
+          // compute energy difference
+          int DE = 2*state[i][j] * (  state[i][periodic(j,L,-1)] + state[periodic(i,L,-1)][j]
+                                    + state[i][periodic(j,L,+1)] + state[periodic(i,L,+1)][j] );
+          
+          // accept or reject
+          if (uniform(gen)<=dE[DE+8]) {
+            // accept flip & update system
+            state[i][j] *= -1;
+            E           += (double) DE;
+          };
+          
+        };
+      };
+    };
     
     // program timing - start
     clock_t start = clock();
     
     // run Metropolis sampling
-    for (int cycle=0; cycle<N_MC[experiment]; cycle++) {
+    for (int cycle=0; cycle<N_MC; cycle++) {
       // sweep over every point on the lattice
       for (int x=0; x<L; x++) {
         for (int y=0; y<L; y++) {
@@ -108,11 +129,11 @@ int main (int argc, char* argv[]) {
             state[i][j] *= -1;
             E           += (double) DE;
             M           += (double) 2*state[i][j];
-            
           };
+        
         };
       };
-      
+
       // update Monte Carlo integrals
       avg_E  += E;
       avg_E2 += E*E;
@@ -121,13 +142,17 @@ int main (int argc, char* argv[]) {
       avg_M2 += M*M;
     
     };
-  
+    
     // normalise Monte Carlo integrals
     avg_E  *= norm;
     avg_E2 *= norm;
     abs_M  *= norm;
     avg_M  *= norm;
     avg_M2 *= norm;
+    
+    // compute heat capacity & magnetic susceptibility
+    double C_V = (avg_E2 - avg_E*avg_E)/(T[experiment]*T[experiment]);
+    double chi = (avg_M2 - abs_M*abs_M)/T[experiment];
     
     // program timing - end
     clock_t end     = clock();
@@ -140,39 +165,30 @@ int main (int argc, char* argv[]) {
     abs_M  /= Nspins;
     avg_M  /= Nspins;
     avg_M2 /= Nspins;
-  
-    // print results
-    cout << "N_MC = " << N_MC[experiment] << ":" << endl;
-    cout << "  eps    = " << avg_E  << endl;
-    cout << "  eps^2  = " << avg_E2 << endl;
-    cout << "  |M|    = " << abs_M  << endl;
-    cout << "  M      = " << avg_M  << endl;
-    cout << "  M^2    = " << avg_M2 << endl;
-    cout << "run-time = " << runtime << " sec" << endl;
+    C_V    /= Nspins;
+    chi    /= Nspins;
     
-    // write results to file
-    File << noshowpos << setw(int_width);
-    File << N_MC[experiment] << " ";
-    File << showpos;
+    // write to file
     File << avg_E   << " ";
     File << avg_E2  << " ";
     File << abs_M   << " ";
     File << avg_M   << " ";
     File << avg_M2  << " ";
+    File << C_V     << " ";
+    File << chi     << " ";
     File << runtime << endl;
     
     // deallocate arrays
     for (int i=0; i<L; i++) {delete[] state[i];};
-    delete[] state;
+    delete[] dE,state;
+    
   };
   
-  // close output file
-  File.close();
+  cout << endl;  
   
   // deallocate arrays
-  delete[] dE,N_MC;
+  delete[] T;
   
   return 0;
 };
-
 

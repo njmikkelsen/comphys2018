@@ -38,6 +38,7 @@
   columns=fullflexible,
   keepspaces=true}
 
+\DeclareTextSymbolDefault{\dh}{T1}
 
 % no "do"'s or "then"'s
 \algdef{SE}[FOR]{NoDoFor}{EndFor}[1]{\algorithmicfor\ #1}{\algorithmicend\ \algorithmicfor}
@@ -60,17 +61,20 @@
 
 \begin{document}
 % titlepage
-\title{FYS3150 Computational Physics - Project 3\\The Thermodynamics of The Ising Model}
+\title{FYS3150 Computational Physics - Project 4\\The Two-Dimensional Ising Model}
 \author{Nils Johannes Mikkelsen}
 \date{\today}
 \noaffiliation
 \begin{abstract}
-hello
+The two-dimensional Ising model is studied using the Metropolis algorithm, a Markov Chains Monte Carlo method. The algorithm successfully produces uncorrelated random Ising states for the Monte Carlo integration. The Ising system is shown to converge to its equilibrium state after some \(10^5\) Monte Carlo cycles regardless of initial state and temperature. The energy-distribution in the equilibrium state is well-behaved, especially for larger lattices. Finally, the critical temperature for the magnetic phase transition of the Ising system is studied. The (numerical) experimental data fails to converge and produces unstable results that are unfit for analysis, possibly due to failure of code parallelization.
 \end{abstract}
 \maketitle
 All material written for project 4 may be found at:\\
 {\scriptsize\url{https://github.com/njmikkelsen/comphys2018/tree/master/Project4}}
 \section{Introduction}
+Originally used to describe the magnetic properties of solids, the Ising model has become one of the most fundamental statistical models in science with applications spanning everything from thermodynamics of quantum effects, modelling of political elections, classification analysis and much more. At its core, the Ising model is a binary model with grid-structured members, which may represent anything from the spin-state of a spin-1/2 particle to whether a society is more likely to vote yes or no on a particular topic.
+
+The aim of this project is to bring back the Ising model to its original use, namely to describe the magnetic properties of solids using only the microsopic property spin and the arrangement of the particles in the solid. The macroscopic behaviour of the solids are estimated using Monte Carlo integration with sampling provided by the Metropolis algorithm, which is a particular Markov Chains Monte Carlo method.
 \section{Theory}
 \subsection{Thermodynamics}
 The following theory is based on the FYS 3150 lectures on statistical physics \cite{statphys}, in addition to the online version of Harvey Gould and Jan Tobochnik's \emph{Thermal and Statistical Physics} \cite{thermal_and_stat} (chapter 5 in particular).
@@ -101,7 +105,7 @@ F=U-TS
 \end{equation}
 where \(U=\expval{\epsilon}\) is the system's internal energy. The Helmoholtz free energy describes the eternal conflict between entropy's tendency to increase and the principle of energy minimisation.
 
-While thermodynamics deserves a more in-depth treatment, this would only be superfluous in this report. The final parts of this section will therefore introduce dome thermodynamic properties without a strict derivation.
+While thermodynamics deserves a more in-depth treatment, this would only be superfluous in this report. The remaining thermodynamics concepts and definitions will therefore be introduced without a strict derivation.
 
 The first and second moments of \(\epsilon\) are given by:
 \begin{subequations}\label{eq:energy_moments}
@@ -187,50 +191,97 @@ Table \ref{tab:2by2_macrostates} provides a simple opportunity to evaluate vario
 &=\text{deg}(A^1)A^1+\cdots+\text{deg}(A^n)A^n\\
 &=\sum_A\text{deg}(A)A
 \end{align*}
-where \(A\in\{A^1,\ldots,A^n\}\). The rest of this section deals with to exact evaluation of the thermodynamic properties introduced in section \ref{sec:selected_thermodynamic_properties} using this summation trick. The quantites are given a superscript \(2\times2\) to indicate that they are only valid for the \(2\times2\) Ising model system.
+where \(A\in\{A^1,\ldots,A^n\}\). The rest of this section deals with to exact evaluation of the thermodynamic properties introduced in section \ref{sec:selected_thermodynamic_properties} using this summation trick. The quantites are given a superscript \(2\times2\) to indicate that they are only valid for the \(2\times2\) Ising system.
 
 The partition function is equal to
 \begin{align}
 Z^{2\times2}&=\sum_\epsilon\text{deg}(\epsilon)e^{-\epsilon\beta}\nonumber\\
 &=e^{8J\beta}+4e^0+4e^0+2e^{-8J\beta}+4e^0+e^{8J\beta}\nonumber\\
-&=12+4\cosh(8J\beta)
+&=8+2e^{-8J\beta}+2e^{8J\beta}
 \end{align}
 
-The first and second moments of the energy is therefore given by
+The first and second moments of the energy are therefore given by
 \begin{align}
-Z\expval{\epsilon}^{2\times2}&=\sum_\epsilon\text{deg}(\epsilon)\epsilon e^{-\epsilon\beta}\nonumber\\
-&=(-8J)e^{8J\beta}+4(0)e^0+4(0)e^0\nonumber\\
-&\quad+2(8J)e^{-8J\beta}+4(0)e^0+(-8J)e^{8J\beta}\nonumber\\
-\expval{\epsilon}^{2\times2}&=-\frac{32}{Z}J\sinh(8J\beta)\\[6mm]
-Z\expval{\epsilon^2}^{2\times2}&=\sum_\epsilon\text{deg}(\epsilon)\epsilon^2e^{-\epsilon\beta}\nonumber\\
-&=(-8J)^2e^{8J\beta}+4(0)^2e^0+4(0)^2e^0\nonumber\\
-&\quad+2(8J)^2e^{-8J\beta}+4(0)^2e^0+(-8J)^2e^{8J\beta}\nonumber\\
-\expval{\epsilon^2}^{2\times2}&=\frac{128}{Z}J^2\cosh(8J\beta)
+\expval{\epsilon}^{2\times2}&=\frac{1}{Z^{2\times2}}\sum_\epsilon\text{deg}(\epsilon)\epsilon\,e^{-\epsilon\beta}\nonumber\\
+&=\frac{1}{Z^{2\times2}}\bigg[(-8J)e^{8J\beta}+4(0)e^0+4(0)e^0\nonumber\\
+&\quad+2(8J)e^{-8J\beta}+4(0)e^0+(-8J)e^{8J\beta}\bigg]\nonumber\\
+\expval{\epsilon}^{2\times2}&=\frac{16J}{Z^{2\times2}}\big(e^{-8J\beta}-e^{8J\beta}\big)\\[6mm]
+\expval{\epsilon^2}^{2\times2}&=\frac{1}{Z^{2\times2}}\sum_\epsilon\text{deg}(\epsilon)\epsilon^2e^{-\epsilon\beta}\nonumber\\
+&=\frac{1}{Z^{2\times2}}\bigg[(-8J)^2e^{8J\beta}+4(0)^2e^0+4(0)^2e^0\nonumber\\
+&\quad+2(8J)^2e^{-8J\beta}+4(0)^2e^0+(-8J)^2e^{8J\beta}\bigg]\nonumber\\
+\expval{\epsilon^2}^{2\times2}&=\frac{128J^2}{Z^{2\times2}}\big(e^{-8J\beta}+e^{8J\beta}\big)
 \end{align}
 which implies that the variance of the energy is
 \begin{align}
-\text{Var}[\epsilon]&=\frac{128}{Z}J^2\cosh(8J\beta)-\Big(-\frac{32}{Z}J\sinh(8J\beta)\Big)^2\nonumber\\
-&=\frac{128J^2}{Z^2}\Big(Z\cosh(8J\beta)-8\sinh^2(8J\beta)\Big)\label{eq:2by2_epsilon_variance}
+\text{Var}[\epsilon]^{2\times2}&=\expval{\epsilon^2}^{2\times2}-\Big[\expval{\epsilon}^{2\times2}\Big]^2\nonumber\\
+&=\frac{256J^2}{\big(Z^{2\times2}\big)^2}\bigg[\frac{Z^{2\times2}}{2}\big(e^{-8J\beta}+e^{8J\beta}\big)\nonumber\\
+&\qquad\qquad\qquad-\big(e^{-8J\beta}-e^{8J\beta}\big)^2\bigg]\nonumber\\
+&=\frac{512J^2}{\big(Z^{2\times2}\big)^2}\Big[Z^{2\times2}-6\Big]\label{eq:2by2_epsilon_variance}
 \end{align}
-
-Similarly, the first and second moments of the net spin is given by
+\newpage
+Similarly, the first and second moments of the net spin are given by
 \begin{align}
-Z\expval{M}^{2\times2}&=\sum_\epsilon\text{deg}(\epsilon)M(\epsilon) e^{-\epsilon\beta}\nonumber\\
-&=(4)e^{8J\beta}+4(2)e^0+4(0)e^0\nonumber\\
-&\quad+2(0)e^{-8J\beta}+4(-2)e^0+(-4)e^{8J\beta}\nonumber\\
+\expval{M}^{2\times2}&=\frac{1}{Z^{2\times2}}\sum_\epsilon\text{deg}(\epsilon)M(\epsilon) e^{-\epsilon\beta}\nonumber\\
+&=\frac{1}{Z^{2\times2}}\bigg[(4)e^{8J\beta}+4(2)e^0+4(0)e^0\nonumber\\
+&\quad+2(0)e^{-8J\beta}+4(-2)e^0+(-4)e^{8J\beta}\bigg]\nonumber\\
 \expval{M}^{2\times2}&=0\\[6mm]
-Z\expval{M^2}^{2\times2}&=\sum_\epsilon\text{deg}(M)M(\epsilon)^2e^{-\epsilon\beta}\nonumber\\
-&=(4)^2e^{8J\beta}+4(2)^2e^0+4(0)^2e^0\nonumber\\
-&\quad+2(0)^2e^{-8J\beta}+4(-2)^2e^0+(-4)^2e^{8J\beta}\nonumber\\
-\expval{M^2}^{2\times2}&=\frac{32}{Z}\big(1+e^{8J\epsilon}\big)
+\expval{M^2}^{2\times2}&=\frac{1}{Z^{2\times2}}\sum_\epsilon\text{deg}(M)M(\epsilon)^2e^{-\epsilon\beta}\nonumber\\
+&=\frac{1}{Z^{2\times2}}\bigg[(4)^2e^{8J\beta}+4(2)^2e^0+4(0)^2e^0\nonumber\\
+&\quad+2(0)^2e^{-8J\beta}+4(-2)^2e^0+(-4)^2e^{8J\beta}\bigg]\nonumber\\
+\expval{M^2}^{2\times2}&=\frac{32}{Z^{2\times2}}\big(1+e^{8J\beta}\big)
 \end{align}
 which implies that the variance of the net spin is
 \begin{align}
-\text{Var}[M]=\frac{32}{Z}\big(1+e^{8J\epsilon}\big)\label{eq:2by2_netspin_variance}
+\text{Var}[M]^{2\times2}=\frac{32}{Z^{2\times2}}\big(1+e^{8J\beta}\big)\label{eq:2by2_netspin_variance}
 \end{align}
 
-The heat capacity \(C_V^{2\times2}\) and the magnetic susceptibility \(\chi^{2\times2}\) are found using equations \eqref{eq:heat_capacity} and \eqref{eq:magnetic_sucseptibility} respectively (which are essentially a rescaling of the energy and net spin variances in equations \eqref{eq:2by2_epsilon_variance} and \eqref{eq:2by2_netspin_variance}). Plots of \(C_V^{2\times2}\) and \(\chi^{2\times2}\) are included in appendix \ref{app:additional_material}.
+Furthermore, the expected magnetisation \(|M|\) is
+\begin{align}
+\expval{|M|}^{2\times2}&=\frac{1}{Z^{2\times2}}\sum_{\epsilon}\text{deg}(\epsilon)|M(\epsilon)|\,e^{-\epsilon\beta}\nonumber\\
+&=\frac{1}{Z^{2\times2}}\bigg[|4|e^{8J\beta}+4|2|e^0+4|0|e^0\nonumber\\
+&\quad+2|0|e^{-8J\beta}+4|-2|e^0+|-4|e^{8J\beta}\bigg]\nonumber\\
+\expval{|M|}^{2\times2}&=\frac{1}{Z^{2\times2}}\big(16+4e^{8J\beta}\big)
+\end{align}
 
+The heat capacity \(C_V^{2\times2}\) and the magnetic susceptibility \(\chi^{2\times2}\) are found using equations \eqref{eq:heat_capacity} and \eqref{eq:magnetic_sucseptibility} respectively (they are essentially a rescaling of the energy and net spin variances). Plots of \(C_V^{2\times2}\) and \(\chi^{2\times2}\) are included in appendix \ref{app:additional_material}.
+\subsubsection{The critical point}
+The Ising model exhibits a magnetic phase transition for 2- or higher-dimensional systems. This phase transition is characterised by a so-called critical point at which thermodynamic quantities typically diverge/converge to zero or experience an abrupt restructuring of their behaviour. The two-dimensional system without an external magnetic field has been solved exactly (see \cite{Onsager}), which will serve as a great benchmark for simulations. The analytical solution finds that the critical tempearture for which the phase transition takes place is:
+\begin{equation}
+\frac{k_BT_C}{J}=\frac{2}{\ln\big(1+\sqrt{2}\big)}\cong2.269
+\end{equation}
+
+For temperatures close to the critical temperature, the thermodynamic quantities behave according to a power law. Most prominently, the net magnetisation, heat capacity and magnetic susceptibility behave according to:
+\begin{subequations}\label{eq:exact_power_laws}
+\begin{align}
+\expval{M(T)}&\propto(T-T_C)^\beta\\
+C_V(T)&\propto|T-T_C|^\alpha\\
+\chi(T)&\propto|T-T_C|^\gamma
+\end{align}
+\end{subequations}
+where \(\beta\), \(\alpha\) and \(\gamma\) are examples of \emph{"critical exponents"}. The analytical solution shows that these exponents for the unperturbed two-dimensional system are:
+\[\beta=\frac{1}{8}\qc\alpha=0\qand\gamma=\frac{7}{4}\]
+
+The phase transition is said to be "magnetic" because the magnetic properties of the system are abruptly altered. However, this name is misleading as the magnetic properties are uniquely defined by the system's underlying spin-configuration. The system's true transition is the movement from an ordered state, in which the spins are mostly aligned, to a disordered state, in which the spins adapt random values. The ordered state (with \(T\leq T_C\)) exhibits spontaneous magnetisation, meaning \(\expval{M}\neq0\), while the disordered state (with \(T\geq T_C\)) does not. That is, \(\expval{M}\) should be nonzero for \(T\leq T_C\) and approximately zero otherwise. 
+
+Another important feature of the critical point is the correlation length \(\xi\):
+\begin{equation}
+\xi(T)=|T-T_C|^{-\nu}
+\end{equation}
+where \(\nu\) is another critical exponent whose analytical solution in the unperturbed two-dimensional system is \(\nu=1\). The correlation length is essentially a measure of the orderedness of a system, in particular, a measure of repetititiveness. With regards to the Ising model, this can be interpreted as a mesaure of whether spins are aligned or not. The correlation function diverges as \(T\) approach \(T_C\).
+
+Because this project will employ period boundary conditions instead of an infinitely sized lattice,\footnote{As if there was a choice.} there is necessarily a small deviation in the critical temperature experienced by the finite lattice and the infinite lattice. This deviation can actually be theoretically predicted using finite size scaling:
+\begin{equation}\label{eq:ideal_critical_temperature_scale}
+T_C(L)-T_C=aL^{-1/\nu}
+\end{equation}
+where \(L\) is the number of spins along the side of an \(L\times L\) lattice and \(a\) is a constant. Furthermore, equations \ref{eq:exact_power_laws} will also experience a similar deviation:
+\begin{subequations}\label{eq:scaled_power_laws}
+\begin{align}
+\expval{M(T)}&\to L^{-\beta/\nu}\\
+C_V(T)&\to L^{\alpha/\nu}\\
+\chi(T)&\to L^{\gamma/\nu}
+\end{align}
+\end{subequations}
+where \(T\) is close to \(T_C(L)\).
 
 
 \subsection{Numerical Simulations}
@@ -342,7 +393,7 @@ The Metropolis-Hastings algorithm may now be stated:
 \end{algorithm}
 where \(N_\text{MH}\) is the number of steps in the Markov chain. Note that the algorithm above does not factor in the Monte Carlo update, this is because the central purpose of the Metropolis-Hastings algorithm is namely just to sample \(x\) values according to \(p(x)\). Nonethelesss, implementations of the algorithm usually include an intermediate step inside this loop in order to avoid multiple loops.
 
-Furthermore, although the distribution is guaranteed to converge, it does not necessarily converge within the first few steps. Accordingly, a common practice is to perform \(N_\text{prep}\) preparation updates to \(X_0\) in a process known as "burn-in", before invoking the Monte Carlo steps.
+Furthermore, although the distribution is guaranteed to converge, it does not necessarily converge within the first few steps. Accordingly, a common practice is to perform \(N_\text{prep}\) preparation updates to \(X_0\) in a process known as "burn-in", before invoking the Monte Carlo steps. When a step in the Markov chain represents a forward step in time, the amount of necessary burn-in is commonly referred to as the equilibration time of the system.
 
 As previously mentioned, this project will implement the Metropolis algorithm, which is a special case of the Metropolis-Hastings algorithm. The Metropolis assumes that \(g\) is symmetric in \(x\) and \(y\), meaning \(g(x|y)=g(y|x)\). This implies that the acceptance probability may be simplified to
 \begin{equation}\label{eq:Metropolis_acceptance_probability}
@@ -351,11 +402,11 @@ As previously mentioned, this project will implement the Metropolis algorithm, w
 \section{Method}
 The main focus of this project is to study the two-dimensional Ising model, where the overaching goal is to estimate the critical temperature for the magnetic phase transition. The system is assumed to be under no influence from external magnetic fields such that the phase transition is completely dependent on unperturbed system. The time-evolution of the system is modelled using a Markov chain, where each step represents a small increment in time. In order to study the critical temperature, the mean magnetisation, heat capacity and magnetic susceptibility will be studied as functions of temperature. The resulting integrals will be estimated using Monte Carlo simulations with Metropolis-sampled states.
 
-Before continuing to the numerical experiments in this project, the following section will describe some general aspects of the simulation.
+Before continuing to the numerical experiments of this project, the following section will describe some general aspects of the simulation.
 \subsection{The Simulation - General Aspects}
-The Ising system is parametrised by temperature via \(\beta=1/k_BT\), which is assumed to be constant during the simulation. To goal is to estimate a series of expectance values as functions of temperature, meaning various integrals must be estimated using Monte Carlo methods. The energy of the ideal Ising model (infinitely large lattice) is continuous with respect to temperature, this will be approximated using periodic boundary conditions such that the continuous formalism developed above is applicable, in particular the Metropolis algorithm.
+The Ising system is parametrised by temperature via \(\beta=1/k_BT\), which is assumed to be constant during the simulation. To goal is to estimate a series of expectance values as functions of temperature, meaning various integrals must be estimated using Monte Carlo methods. The energy of the ideal Ising model (infinitely large lattice) is continuous with respect to temperature, this will be approximated using periodic boundary conditions such that the continuous formalism developed above is applicable, in particular the Metropolis algorithm. This project will not study the effects of irregular lattices and will therefore use a square lattice with \(L\times L\) spins.
 \subsubsection{The basic approach - Flip one spin}
-The (micro-)state of the Ising system is the spin configuration of the lattice structure. Becuase the Ising system is canonical, the energy must necessarily behave according to the Boltzmann distribution (equation \eqref{eq:Boltzmann_Distribution}). Now, assuming \(g\) is symmetric in \(x\) and \(y\), its follows that the Metropolis acceptance probability is equal to
+The (micro-)state of the Ising system is the spin configuration of the lattice structure. Becuase the Ising system is canonical, the energy must necessarily behave according to the Boltzmann distribution (equation \eqref{eq:Boltzmann_Distribution}). Now, assuming \(g\) is symmetric in \(x\) and \(y\), it follows that the Metropolis acceptance probability is equal to
 \begin{align}
 \alpha(y,x)&=\min\left\lbrace1,\frac{\frac{1}{Z}e^{-\epsilon(y)\beta}}{\frac{1}{Z}e^{-\epsilon(x)\beta}}\right\rbrace\nonumber\\
 &=\min\left\lbrace1,e^{[\epsilon(x)-\epsilon(y)]\beta}\right\rbrace\label{eq:Ising_Metropolis_acceptance}
@@ -397,8 +448,7 @@ M(y)-M(x)=\Delta M=2s_i(y)
 \end{equation}
 
 \subsubsection{The algorithm}
-The algorithm is basically a special case of the combination of algorithms \ref{algo:standard_Monte_Carlo} and \ref{algo:Metropolis_Hastings}. Nonetheless, some minor details (such as evaluating the exponential outside the Monte Carlo simulation) have been implemented to spare computation. Note that later modifications will be introduced where necessary, but the general algorithm is:
-
+The algorithm is basically a special case of the combination of algorithms \ref{algo:standard_Monte_Carlo} and \ref{algo:Metropolis_Hastings}. Nonetheless, some minor details (such as evaluating the exponential outside the Monte Carlo simulation) have been implemented to spare computation. Further adjustments or additions to the algorithm are introduced where relevant, however the general algorithm is:
 \begin{algorithm}[H]
 \caption{The Ising Model Metropolis Monte Carlo}\label{algo:Ising_Model_Algorithm}
 \begin{algorithmic}[1]
@@ -427,92 +477,110 @@ The algorithm is basically a special case of the combination of algorithms \ref{
 \State Normalise Monte Carlo integrals according to \(N_\text{MC}\) and \(L\times L\).
 \end{algorithmic}
 \end{algorithm}
-There are several components of algorithm \ref{algo:Ising_Model_Algorithm} that are implemented for computational reasons, these are explained below. Observe the triple \texttt{for}-loop in \ref{algo:Ising_Model_Algorithm}: this is actually a double loop in disguise. The outer loop is the standard Monte Carlo integration loop from algorithm \ref{algo:standard_Monte_Carlo}. The two inner loops (\(k\) and \(l\)) are actually the single Metropolis loop in algorithm \ref{algo:Metropolis_Hastings}. The idea it to loop over every spin in the lattice in order to produce an uncorrelated new state. However, flipping every spin in the lattice would just return the inverse (negative) state, thus each spin is chosen at random.
+There are several components of algorithm \ref{algo:Ising_Model_Algorithm} that are implemented for computational reasons, these are explained below. On a different note, observe the triple \texttt{for}-loop in \ref{algo:Ising_Model_Algorithm}: this is actually a double loop in disguise. The outer loop is the standard Monte Carlo integration loop from algorithm \ref{algo:standard_Monte_Carlo}. The two inner loops (\(k\) and \(l\)) are actually the single Metropolis loop in algorithm \ref{algo:Metropolis_Hastings}. The idea it to loop over every spin in the lattice in order to produce an uncorrelated new state. However, flipping every spin in the lattice would just return the inverse (negative) state, thus each spin is chosen at random.
 
-Furthermore, note that the Metropolis-Hastings algorithm (\ref{algo:Metropolis_Hastings}) contains a two-step \texttt{if}-test. In particular, the algorithm computes first \(\alpha=\exp(-\Delta\epsilon\beta)\) and then evaluates \(\alpha(y,x)\). In case \(\alpha\) is greater than 1, the move is directly accepted. On the other hand, if \(\alpha\) is the smallar of the two, the move is accepted with probability \(\alpha\) by comparing it with a random number \(a\sim\mathcal{U}(0,1)\). 
+As equation \eqref{eq:Ising_Metropolis_acceptance} illustrates, the only factor with an impact on \(\alpha(y,x)\) (and thereby the probability of acceptance) is \(\epsilon(y)-\epsilon(x)\), which equation \eqref{eq:Ising_flip_one_energy_change} indicates is uniquely determined by the flipped spin and its neighbours. Moreover, because there is a limited number of possible arrangements for the neighbours of the flipped spin, there is thus a limited number of \(\alpha(y,x)\). This observation is implemented in algorithm \ref{algo:Ising_Model_Algorithm} in lines 3 and 13: because \eqref{eq:Ising_flip_one_energy_change} is an integer number of \(J\), this integer uniquely determines \(\alpha(y,x)\) by acting as an index for the array of possible \(\alpha(y,x)\) values that is computed before the iteration.
+
+Furthermore, note that the Metropolis-Hastings algorithm (\ref{algo:Metropolis_Hastings}) contains a two-step \texttt{if}-test. In particular, the algorithm computes first \(\alpha=\exp(-\Delta\epsilon\beta)\) and then evaluates \(\alpha(y,x)\). In case \(\alpha\) is greater than 1, the move is directly accepted. On the other hand, if \(\alpha\) is the smaller of the two, the move is accepted with probability \(\alpha\) by comparing it with a random number \(a\sim\mathcal{U}(0,1)\). 
 
 
 \subsection{Numerical Experiments}
-The following section describes the specific problems that are studied in this project. Additional details are introduced where relevant.
-\subsubsection{Verifying the computations}
-To begin the project, the Ising simulation will be compared to the known \(2\times2\) system with a temperature of \(T=1\). The thermodynomic properties of interest to this experiment are: \(\expval{\epsilon}\), \(\expval{M}\), \(C_V\), \(\chi\) and \(\expval{|M|}\), whose analytic solutions are described in section \ref{sec:2by2_system}. The main goal of this experiment is to make a crude analysis of the Monte Carlo integrals' dependency on the number of Monte Carlo cycles \(N_\text{MC}\) when the Metropolis algorithm is given zero burn-in time (meaning all cycles contribute towards the integrals). The experiment will be run 40 unique times for each of the following number of Monte Carlo cycles: \(10^2\), \(10^3\), \(10^4\), \(10^5\), \(10^6\) and \(10^7\).
-\subsubsection{Studying the burn-in}
+The following section describes the numerical experiments that are studied in this project. There are 4 experiments in total, each serving a unique task. The culmination of the project is (of course) experiment no. 4 in which the goal is to estimate the critical temperature of the magnetic phase transition.
+
+All experiments will use a scaled tempearture with units \((J/k_B)\) K, meaning both \(J\) and \(k_B\) are essentially removed from all equations.
+\subsubsection{Experiment 1: Verifying the computations}
+To begin the project, the Ising simulation will be compared to the known \(2\times2\) system with a temperature of \(T=1\). The thermodynomic properties of interest to this experiment are: \(\expval{\epsilon}\), \(\expval{\epsilon^2}\), \(\expval{M}\) and \(\expval{M^2}\) whose analytic solutions are:
+\[\expval{\epsilon}^{2\times2}\cong-1.9973\qc\expval{\epsilon^2}^{2\times2}\cong15.979\]
+\[\expval{M}^{2\times2}\cong0\qc\expval{M^2}^{2\times2}\cong3.9960\]
+
+The main goal of this experiment is to verify that the Metropolis algorithm is succesful in its random sampling of states by making a crude analysis of the Monte Carlo simulations' dependency on the number of Monte Carlo cycles \(N_\text{MC}\). To simplify, the Metropolis algorithm is given zero burn-in time, meaning all cycles contribute towards the integrals. The experiment will be run 40 unique times for each of the following number of Monte Carlo cycles: \(10^2\), \(10^3\), \(10^4\), \(10^5\), \(10^6\) and \(10^7\).
+\subsubsection{Experiment 2: Studying the burn-in}
 The next experiment will focus on the Monte Carlo burn-in with special interest on the number of sufficient cycles and the importance of the initial state. The experiment features a \(20\times20\) lattice with either of two initial states: the ground state (ordered) and a random state (disordered). In the ground state (lowest energy state), all spins point upwards (see equation \eqref{eq:Ising_system_energy}), whereas in the random state, all spins are equally distributed between down and up spins.
 
-The jist of the experiment is to perform the simulation as before, however track the contributions to the Monte Carlo integrals through the simulation. The resulting arrays, which contain the commulative sums of the integration, are then normalised according to the number of cycles that has passed. The experiment will use an upper boundary of \(N_\text{MC}=10^6\) for all runs. Moreover, the experiment will also be run with 3 different temperatures: \(T_1=1\), \(T_2=1.7\) and \(T_3=2.4\).
+The jist of the experiment is to perform the simulation as in experiment 1, however track the contributions to the Monte Carlo integrals throughout the simulation. The resulting arrays, which contain the commulative sums of the integration, are then normalised according to the number of cycles that has passed. The experiment will use an upper boundary of \(N_\text{MC}=10^6\) for all runs. Moreover, the experiment will also be run with 3 different temperatures: \(T=1.0\), \(T=1.7\) and \(T=2.4\) in order to study temperature dependence.
 
-To summarise, the experiment is run with \(N_\text{MC}=10^6\) for 3 different temperatures from 2 dfferent initial states, making a total 6 different runs. In addition to the Monte Carlo integrals, this experiment will also track how the number of accepted proposals evolves with increasing number of Monte Carlo cycles.
-\subsubsection{The energy-distribution: A frequentist approach}
-Having found a sufficient burn-in equilibriation time, the next step is to study the established equilibrium as it continues to evolve. To do so, the focus falls on the energy-distribution of the spin-states produced by the Metroplis algorithm (after converging), which will be determined using a frequentist approach: namely measuring the frequency of each energy as the system evolves.
+To summarise, the experiment is run with \(N_\text{MC}=10^6\) for 3 different temperatures starting from 2 dfferent initial states, making a total 6 different runs. In addition to the Monte Carlo integrals, this experiment will also track how the number of accepted proposals evolves with increasing number of Monte Carlo cycles.
+\subsubsection{Experiment 3: The energy-distribution: A frequentist approach}
+Having found a sufficient burn-in equilibriation time, the next step is to study the established equilibrium as it continues to evolve. To do so, the focus falls on the energy-distribution of the spin-states produced by the Metroplis algorithm (after converging). This distribution will be determined using a frequentist approach by measuring (counting) the frequency of each energy as the system evolves (recall that the energy can only make integer steps of \(J\)).
 
-Similar to the previous experiment, this experiment will also use a lattice with features \(20\times20\) and be run with temperatures \(T_1\), \(T_2\) and \(T_3\). The system is initialised from the ground state and given a burn-in equal to the sufficient burn-in found in the previous experiment. Starting from the equilibrium state, the system is simulated over \(10^6\) steps in order to provide a decent sample size. Particular interest is placed on how the spread in the energy (during evolution) behaves with respect to the temperature of the system.
+Similar to the previous experiment, this experiment will also use a lattice with features \(20\times20\) and be run with temperatures \(T=1.0\), \(T=1.7\) and \(T=1.4\). The system is initialised from the ground state and given a burn-in based on the equilibration time found in the previous experiment. Starting from the equilibrium state, the system is simulated over \(10^6\) steps in order to provide a decent sample size. Particular interest is placed on how the spread in the energy (during evolution) behaves with respect to the temperature of the system.
 
 The Boltzmann distribution is a gaussian with respect to energy, meaning the resulting distributions should ideally be bell-curves.
-\subsubsection{Studying the phase transition}
+\subsubsection{Experiment 4: Studying the phase transition}
+The final experiment in this project is to study the phase transition of the Ising system as a function of the number spins \(L\) in the \(L\times L\) lattice. In comparison with the other experiments, this experiment is by far the most computationally heavy. Thus, only a handful of \(L\) values will be used. Furthermore, the analytical critical temperature is about 2.27, so the simulations will use a focused temperature region of \(T\in[2.23,2.31]\) in order to capture the more details regarding the transition.
 
+The simulations will use \(10^6\) cycles for both the burn-in and the Monte Carlo integration. Furthermore, the system is initialised from the ground state with 25 linearly spaced temperatures between and including 2.23 and 2.31. All simulations are run for \(L=40\), \(L=60\), \(L=80\) and \(L=100\). In order to save time, resources and MC cycles, the computation will be implemented using parallel programming. In particular, using Open MPI, the temperature range is divided into four equally large regions and simulated simultaneously.
 
+The thermodynamic quantities of interest to this experiment are: \(\expval{\epsilon}\), \(\expval{|M|}\), \(C_V\) and \(\chi\) as functions of temperature. Although the definition of \(\chi\) uses \(\expval{M}\), its value will be evaluated using \(\expval{|M|}\) in order to regularize fluctuations. 
 
-
-
-
-
-
-
-
-
-
-
-
+Finally, the critical temperature will be estimated using either of equations \eqref{eq:scaled_power_laws} (the choice depends on the experimental results) and a suiting polynomial fit. Having found the critical temperatures, the final estimate of the ideal critical temperature is found using \eqref{eq:ideal_critical_temperature_scale} (the ideal \(T_C\) is the \(1/L\to0\) intercept of the \(T_C(L)\) curve).
 
 \section{Results}
 \subsection{Experiment 1}
-The experiments showed a clear tendency for inaccurate estimates when the number of Monte Carlo cycles dropped below \(\approx10^6\). Figure \ref{fig:2by2_expected_netmagnetisation} shows the experiment-estimates for the expected net magnetisation as a function of the number of Monte Carlo cycles. The mean estimate clearly approach 0 (the analytical solution) with increasing \(N_\text{MC}\), which is an indication of the algorithm successfully simulating the Ising model. This is further supported by the decreasing spread of the estimates. The integral estimates for \(N_\text{MC}\geq10^4\) are summarised in table \ref{tab:2by2_simulation_results} using the mean estimates. Overall, the experiment has shown that the simulation provides reliable results for \(N_\text{MC}\gtrapprox10^7\).
+The experiments showed a clear tendency for inaccurate estimates when the number of Monte Carlo cycles dropped below \(\approx10^6\). Figure \ref{fig:2by2_expected_netmagnetisation} shows a plot of the expected net magnetisation a function of the number of Monte Carlo cycles for different runs. The mean estimate clearly approach 0 (the analytical solution) with increasing \(N_\text{MC}\), indicating that the algorithm successfully simulating the Ising model. This is further supported by the decreasing spread of the estimates as \(N_\text{MC}\) increases. Table \ref{tab:results_experiment1} shows a comparison between the exact expectance values \(\expval{\epsilon},\ldots,\expval{M^2}\) and the \(N_\text{MC}=10^7\) estimates. The estimates are incredibly accurate with a relative error of only \(\approx0.06\)\%, even without a burn-in period.
 
-\begin{figure}
+All indicators point towards the algorithm being successful in its simulation of the Ising model.
+
+\begin{figure}[hb]
 \centering
-\includegraphics[scale=0.5]{../output/figures/experiment1/netmagnetisation_1.png}
+\includegraphics[scale=0.5]{../output/figures/experiment1/netmagnetisation.png}
 \caption{Estimates of the expected net magnetisation for the \(2\times2\) Ising system with \(T=1\). The analytic value is 0, which the graph shows a clear tendency towards.}\label{fig:2by2_expected_netmagnetisation}
 \end{figure}
 
-
+\begin{table}[hb]
+\centering
+\begin{tabular}{|c|c|c|c|c|}
+\hline\rule{0pt}{0.3cm}
+& \(\expval{\epsilon}\) & \(\expval{\epsilon^2}\) & \(\expval{M}\) & \(\expval{M^2}\) \\\hline
+exact & -1.997 & 15.979 & 0.000 & 3.996 \\\hline\rule{0pt}{0.4cm}
+best run & -1.996 & 15.968 & \(1.5856\cdot10^{-3}\) & 3.993 \\\hline\rule{0pt}{0.4cm}
+relative error [\%] & 0.05 & 0.07 & N/A & 0.08 \\\hline
+\end{tabular}
+\caption{Comparison between the exact solution and the best numerical result for the \(2\times2\) Ising system. The relative error is computed using \((\text{true}-\text{estimate})/\text{true}\). The error of \(\expval{M}\) is not included due to division by zero.}\label{tab:results_experiment1}
+\end{table}
+\newpage
 \subsection{Experiment 2}
-The results from the experiment are shown in figures \ref{fig:experiment2_energy}-\ref{fig:experiment2_accepted}. Interestingly, figure \ref{fig:experiment2_accepted} reveals that the rate of the number of accepted proposals converges on 1 for all temperatures, which is indicative of a state of equilibrium. Furthermore, the figure also exposes the temperature dependence of the equilibration time (number of sufficient Monte Carlo cycles for reaching equilibrium), in particular, systems with greater temperature converge faster than systems with less temperature. All systems show clear equilibrium behaviour with a burn-in of \(10^5\) Monte Carlo cycles.
+The results from the experiment are shown in figures \ref{fig:experiment2_energy}-\ref{fig:experiment2_accepted}. Generally speaking, the low temperature simulations (red and green graphs) show a much more stable tendency towards their equilibrium states, whereas the high-temperature simulation (blue graphs) shows a slightly more rugged path. Figure \ref{fig:experiment2_accepted} shows the accumulated number of accepted proposals througout the simulation, and most notably shows that all simulations have approximately constant acceptance rates. It is interesting that even the high-temperature simulation shows this behaviour as opposed to showing a decreasing rate of acceptance when equilibrium is established. It points towards an equilibrium state with a strong tendency for fluctuations, albeit too small to break the equilibrium.
+
+In addition, the high-temperature simulation converges on the stable equilibrium at a much later time than the low-temperature simulations. Nonetheless, all systems show equilibrium behaviour after some \(10^5\) Monte Carlo cycles.
+
+Another interesting detail is that the initial state seems to have no significant impact on the convergence to the equilibrium state. This is especially interesting in the high-temperature case because it signifies that extra care with the initial state is not necessary in future experiments.
 
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.5]{../output/figures/experiment2/energy.png}
-\caption{Energy}\label{fig:experiment2_energy}
+\caption{Evolution of \(\expval{\epsilon}\) of the \(20\times20\) Ising system.}\label{fig:experiment2_energy}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.5]{../output/figures/experiment2/energy2.png}
-\caption{Energy}\label{fig:experiment2_energy2}
+\caption{Evolution of \(\expval{\epsilon^2}\) of the \(20\times20\) Ising system.}\label{fig:experiment2_energy2}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.5]{../output/figures/experiment2/magnetisation.png}
-\caption{Energy}\label{fig:experiment2_magnetisation}
+\caption{Evolution of \(\expval{|M|}\) of the \(20\times20\) Ising system.}\label{fig:experiment2_magnetisation}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.5]{../output/figures/experiment2/netmagnetisation2.png}
-\caption{Energy}\label{fig:experiment2_netmagnetisation}
+\caption{Evolution of \(\expval{M}\) of the \(20\times20\) Ising system.}\label{fig:experiment2_netmagnetisation}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.5]{../output/figures/experiment2/netmagnetisation2.png}
-\caption{Energy}\label{fig:experiment2_netmagnetisation2}
+\caption{Evolution of \(\expval{M^2}\) of the \(20\times20\) Ising system.}\label{fig:experiment2_netmagnetisation2}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.5]{../output/figures/experiment2/accepted.png}
-\caption{Energy}\label{fig:experiment2_accepted}
+\caption{Number of accepted proposals from the Metropolis algorithm in the evolutino of the \(20\times20\) Ising system.}\label{fig:experiment2_accepted}
 \end{figure}
 
 \subsection{Experiment 3}
@@ -523,13 +591,13 @@ The spread (standard deviation) in the energy evolution are summarised in table 
 \begin{figure}
 \centering
 \includegraphics[scale=0.5]{../output/figures/experiment3/system_energy.png}
-\caption{Energy}\label{fig:experiment3_system_energy}
+\caption{Evolution of the energy of the \(20\times20\) Ising system, starting from equilibrium.}\label{fig:experiment3_system_energy}
 \end{figure}
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.5]{../output/figures/experiment3/energy_distribution.png}
-\caption{Energy}\label{fig:experiment3_energy_distribution}
+\caption{The distribution of energy states for the \(20\times20\) Ising system at equilibrium.}\label{fig:experiment3_energy_distribution}
 \end{figure}
 
 \begin{table}
@@ -544,14 +612,84 @@ The spread (standard deviation) in the energy evolution are summarised in table 
 \caption{Spread in energy during evolution from equilibrium of the \(20\times20\) system.}\label{tab:20by20_std_energy_evolution}
 \end{table}
 
+\subsection{Experiment 4}
+The experimental results for the final experiment took a considerable amount of time to produce, which manifested itself in a smaller sample size of interesting data. The results are shown in figures \ref{fig:experiment4_energy_full}-\ref{fig:experiment4_magnetic_susceptibility}. There is quite a lot of instability within these figures as well as some conflicting results. Most notably, consider the temperature region about \(T\approx2.24\) in figure \ref{fig:experiment4_magnetic_susceptibility}: it is reasonable to assume the \(L=100\) curve should be closest to the exact result, however in this particular example it appears agrees with the tendencies of the \(L=40\) curve. Only making matters worse, both the \(L=60\) and \(L=80\) curves (which are seemingly "more accurate" than the \(L=40\) curve) show the complete opposite tendencies, meaning no convergence takes place.
+
+Seeing that all the other experiments provided reasonable results, in addition to the fact that this experiment was the only one to be implement using parallel coding. It is not only possible, but probably the most reasonable explanation that some information has been handled incorrectly during the computation. This assertion is based on the observation that all the graphs seem to make abrupt and large fluctuations at the exact same temperatures. Moreover, the linear spacing of these temperature points is suspiciously similar to the division of the temperature range into four equally large temperature ranges during the parallel compuation. It is difficult to pinpoint exactly where the error stems from, especially because the code was built on the successful non-parallelized code used in previous experiments. The random generator used in the simulation is a standard Mersenne Twister, which could be one possibility of error.
+
+The experimental data does not really indicate some sort of phase transition at all. Nevertheless, a critical temperature was estimated for the sake of the project. The following is a representation of what was intended to be done with a reasonable \(C_V(T)\).
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{../output/figures/experiment4/energy_full.png}
+\caption{The energy of the Ising system as a function of temperature.}\label{fig:experiment4_energy_full}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{../output/figures/experiment4/magnetisation_full.png}
+\caption{The magnetisation of the Ising system as a function of temperature.}\label{fig:experiment4_magnetisation_full}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{../output/figures/experiment4/heat_capacity_full.png}
+\caption{The heat capacity of the Ising system as a function of temperature.}\label{fig:experiment4_heat_capacity_full}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{../output/figures/experiment4/magnetic_susceptibility_full.png}
+\caption{The magnetic susceptibility of the Ising system as a function of temperature.}\label{fig:experiment4_magnetic_susceptibility}
+\end{figure}
+
+The true critical temperature is about 2.27, however in ignorance of the true value the best estimate is the \(L=100\) curve. It so happens that all the thermodynamic properties of the \(L=100\) system undergo a critical shift for temperatures \(\approx2.28\), thus making this the most reasonable region for which a phase transition may occur. Now, there seems to be the most agreement (least contradiction) between the different systems in their estimate of heat capacity (figure \ref{fig:experiment4_heat_capacity_full}. Because heat capacity is expected to have a distinct maximum at the critical temperature (see figure \ref{fig:2by2_HeatCapacity_MagneticSusceptibility}), it is therefore the most reasonable figure to analyse. A zoomed-in version of the region is shown in figure \ref{fig:experiment4_heat_capacity_zoom}.
+
+There is not particular polyomial form of \ref{fig:experiment4_heat_capacity_zoom}, so a simple second order polynomial was used as a linear regressor. The maximum of a concave down parabola \(ax^2+bx+c\), i.e. its vertex, is given by \(h=-b/2a\), thus making the estimation of the critical temperature simpler. An example of the polynomial fit is shown in figure \ref{fig:experiment4_polyfit}. Because different graphs behave somewhat differently in the high-temperature limit, slightly tailored temperature ranges were used in the regression. The resulting estimates for the critical temperature are shown in table \ref{tab:critical_temperatures}, the critical temperatures are plotted against the inverse lattice size in figure \ref{fig:experiment4_critical}. In conclusion, the final estimate for the critical temperature of the magnetic phase transition of the two-dimensional Ising model is \(\hat{T}_C=2.2754\), which is about 0.0064 away from the exact value. Note that no uncertainties have been discussed as the estimate is based on experimental data that really does not support the existence of a phase transition at all.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{../output/figures/experiment4/heat_capacity_zoom.png}
+\caption{A zoomed-in version of figure \ref{fig:experiment4_heat_capacity_full}}\label{fig:experiment4_heat_capacity_zoom}
+\end{figure}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{../output/figures/experiment4/polyfit_60.png}
+\caption{An example of the second-order polynomial fit of the heat capacity data.}\label{fig:experiment4_polyfit}
+\end{figure}
+
+\begin{table}
+\centering
+\begin{tabular}{|c|c|c|}
+\hline\rule{0pt}{0.32cm}
+\(L\) & \(T_C\) \\\hline\rule{0pt}{0.32cm}
+ 40 & 2.300606 \\\hline
+ 60 & 2.292721 \\\hline
+ 80 & 2.290087 \\\hline
+100 & 2.283954 \\\hline
+\end{tabular}
+\caption{Critical temperatures for the Ising system.}\label{tab:critical_temperatures}
+\end{table}
+
+\begin{figure}[h!]
+\centering
+\includegraphics[scale=0.5]{../output/figures/experiment4/critical.png}
+\caption{Critical temperatures for the Ising system as a function of the inverse of the lattice size.}\label{fig:experiment4_critical}
+\end{figure}
 
 
-
-
-\newpage
-\newpage
 \section{Discussion}
+Overall the project has seen both major success and major failure in its attempt to simulate the Ising model. In experiment 1, the Metropolis algorithm provided a stable and reliable source of uncorrelated random states. Experiment 2 showed a clear converge towards equilibrium, regardless of whether the initial state was ordered or disordered, and for both high and low temperatures. The third experiment revealed the importance of lattice size, especially with regards to energy cut-off. It also quantified the fluctation spread of the system whilst in equilibrium with respect to temperature. And finally, the final experiment was more or less a complete failure as the experimental results were completely off the expected results.
+
+With regards to experiment 1 there is actually a little room for improvement. The experiment only considered the \(2\times2\) system because it was solved exactly. This procedure is easily generalised as the exact solution to any two-dimensional lattice is known (see \citep{Onsager}). The same goes for experiment 2 and 3 in which only small lattices were analysed. Moreover, experiment 3 showed that the lattice size was even too small to capture the true energy distribution as it was cut off by a lacking number of available spins.
+
+On the other hand, there is much room for improvement in the final experiment. Most of all, clearly some error was made during the implementation of the parallized computation. It is possible that the unstable nature of the results followed due to correlated "random" numbers from the Mersenne Twister, but this is only speculation at this point.
+
+Although the final value is actually \emph{quite good}, it is unreasonable to place a firm belief in the findings. First of all, had it not been for the purpose of extracting a critical temperature, there never would have been a reason for analysing the data with respect to some form of phase transition. More importantly however, the regression analysis was incredibly tailored to the problem: most of the temperature data was ignored, the temperature range was tweaked to fit the data, etc.
+
 \section{Conclusion}
+In conclusion, the Metropolis algorithm has been shown to provide a stable, uncorrelated random set of states that are suitible for use in Monte Carlo integration. The Ising system used an average of \(10^5\) cycles to properly converge to the equilibrium state, regardless of the original state and regardless of temperature. Furthermore, the energy-distribution of the Ising system whist in equilibrium behaves fairly well according to an expected gaussian distribution. The accuracy of the energy-distribution improves with increasing lattice size, while also preventing cut-off errors due to lack of available spins. The project's final simulation, whose purpose was to estimate the critical temperature of the two-dimensional Ising model, failed to provide reasonable experimental data. The problem seems to be connected with the implementation of code parallelization as codes used in the previous experiments worked successfully.
 
 
 
@@ -599,7 +737,8 @@ The spread (standard deviation) in the energy evolution are summarised in table 
 
 \begin{figure}[h!]
 \centering
-\includegraphics[scale=0.45]{../output/figures/HeatCapacity_MagneticSusceptibility_TwoByTwo.png}
+\includegraphics[scale=0.65]{../output/figures/2by2/heatcapacity_susceptibility.png}
+\caption{\(2\times2\) Ising model.}\label{fig:2by2_HeatCapacity_MagneticSusceptibility}
 \end{figure}
 
 
@@ -634,36 +773,6 @@ The spread (standard deviation) in the energy evolution are summarised in table 
 }
 \end{table}
 
-\clearpage
-\section{Additional Results}
-\subsection{Numerical Results From Experiment 1}
-\begin{table*}[h!]
-\centering
-\begin{tabular}{|c|c|c|c|c|}
-\hline\rule{0pt}{0.32cm}
-Estimates & \(10^4\) cycles & \(10^5\) cycles & \(10^6\) cycles & \(10^7\) cycles 
-\\\hline\rule{0pt}{0.32cm}
-\(\expval{\epsilon}\) &
-\(-1.9961\pm0.072\)\% & \(-1.9959\pm0.026\)\% & \(-1.9960\pm0.009\)\% & \(-1.9960\pm0.003\)\%
-\\\hline\rule{0pt}{0.32cm}
-\(\expval{\epsilon^2}\) [\(10^1\)] &
-\(1.5969\pm0.072\)\% & \(1.5967\pm0.026\)\% & \(1.5968\pm0.009\)\% & \(1.5968\pm0.003\)\%
-\\\hline\rule{0pt}{0.32cm}
-\(\expval{|M|}\) [\(10^{-1}\)] &
-\(9.9871\pm0.048\)\% & \(9.9863\pm0.019\)\% & \(9.9867\pm0.006\)\% & \(9.9866\pm0.002\)\%
-\\\hline\rule{0pt}{0.32cm}
-\(\expval{M}\) [\(10^{-4}\)] &
-\(1178.0\pm297.5\)\% & \(-235.7\pm516.0\)\% & \(-19.0\pm2268.9\)\% & \(9.4\pm1654.9\)\%
-\\\hline\rule{0pt}{0.32cm}
-\(\expval{M^2}\) &
-\(3.9935\pm0.060\)\% & \(3.9931\pm0.022\)\% & \(3.9933\pm0.007\)\% & \(3.9933\pm0.002\)\%
-\\\hline\rule{0pt}{0.32cm}
-algorithm run time [s] &
-\(0.031\pm2.873\)\% & \(0.305\pm3.306\)\% & \(3.067\pm3.110\)\% & \(30.812\pm2.799\)
-\\\hline
-\end{tabular}
-\caption{The average estimates of the various thermodynamic properties for the \(2\times2\) Ising system. The averages are evaluated from 40 unique runs without burn-in. The confidence intervals are given by the standard deviation of the estimates relative to the averages. Note that the large error boundaries of \(\expval{M}\) is actually a poor representation of the quality of the estimate, because the analytical value is 0. Hence, any significant deviation from 0 would necessarily bring a large spread in average estimate, regardless of the accuracy of the estimate.}\label{tab:2by2_simulation_results}
-\end{table*}
 
 
 
