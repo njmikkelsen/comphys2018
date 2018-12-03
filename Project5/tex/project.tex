@@ -105,6 +105,18 @@ In case \(\ket{\psi}\) is an eigenket of \(\hat{A}\) with corresponding eigenval
 \bra{\psi}\hat{A}\ket{\psi}=\bra{\psi}a\ket{\psi}=a\braket{\psi}{\psi}=a
 \end{equation}
 assuming \(\ket{\psi}\) is normalised. Expanding the integral in \eqref{eq:expected_value_of_operator_eigenstate} one finds that the wave functions simplify to \(\abs{\psi(\vb{r})}^2\): the probability density of finding the system at \(\vb{r}\).
+\subsubsection{Natural (atomic) units}
+To simplify the mathematics and computations in this project, natural atomic units will be adapted. The particular system of units adapted in this project define
+\begin{equation}
+\hbar=e=m_e=k_e=k_B\qand c=\frac{1}{\alpha}\approx137
+\end{equation}
+where \(e\) is the elementary charge, \(k_e\) is Coulomb's constant, \(k_B\) is the Boltzmann constant and \(\alpha\) is the fine structure constant. Written in terms of these units the Hamiltonian takes the form
+\begin{equation}
+\hatHH=-\frac{1}{2m}\nabla^2+V(\vb{r},-i\nabla)
+\end{equation}
+where \(m\) is given in terms of \(m_e\). Energy is expressed in units of ``Hartree energy'' \(E_h\):
+\[\alpha=\frac{k_ee^2}{\hbar c}\implies E_h=\frac{m_e{k_e}^2e^4}{\hbar^2}=m_ec^2\alpha^2=1\]
+
 \subsubsection{The variational principle \& method}
 The variational principle (not to be confused with the variational method, see below) is a simple statement that is true for all quantum systems. It states that the expected energy of a quantum system in a state \(\ket{\psi}\) is greater than or equal to the ground state energy:
 \begin{equation}\label{eq:variational_principle}
@@ -112,33 +124,26 @@ E_g\leq\frac{\bra{\psi}\hatHH\ket{\psi}}{\braket{\psi}}
 \end{equation}
 Here \(\ket{\psi}\) is not necessarily normalized (which is way the expected energy is divided by the norm). The equation becomes an equality only when \(\ket{\psi}\) is the ground state. 
 
-The variational principle is the basis for the \emph{variational method}, which exploits the simplicity of the varitional principle in order to approximate the ground state energy. The primary problem is to study some Hamiltonian \(\hatHH\) whose energy eigenkets are unknown. The idea is to introduce a so-called \emph{trial state} \(\ket{\psi_T(\alpha)}\), which is dependent on some parameter \(\alpha\) (where \(\alpha\) is not necessarily scalar). If chosen correctly, the trial state may be able to reproduce the functional shape of the ground state, thus providing an approximate upper bound \(E_T\) of the ground state energy. The variational method is actually an umbrella term for several methods, however, their underlying idea is more or less the same. The process is most easily shown as an algorithm:
+The variational principle is the basis for the \emph{variational method}, which exploits the simplicity of the varitional principle in order to approximate the ground state energy. The primary problem is to study some Hamiltonian \(\hatHH\) whose energy eigenkets are unknown. The idea is to introduce a so-called \emph{trial state} \(\ket{\psi_T(\gamma)}\), which is dependent on some parameter \(\gamma\) (which is not necessarily scalar). If chosen correctly, the trial state may be able to reproduce the functional shape of the ground state, thus providing an approximate upper bound \(E_T\) of the ground state energy. The variational method is actually an umbrella term for several methods, however, their underlying idea is more or less the same. The process is most easily shown as an algorithm:
 \begin{algorithm}[H]
 \caption{The Varitational Method}\label{algo:varitational_method}
 \begin{algorithmic}[1]
-\State Suggest a trial state \(\ket{\psi_T(\alpha)}\).
-\State Compute the trial energy \(E_T\) as a function of \(\alpha\):
-\[E_T(\alpha)=\frac{\bra{\psi_T(\alpha)}\hatHH\ket{\psi_T(\alpha)}}{\braket{\psi_T(\alpha)}}\]
-\State Minimise \(E_T\) with respect to \(\alpha\).
-\State Choose the optimal \(\ket{\psi_T(\alpha)}\) based on the \(\alpha\) that minimises \(E_T\).
+\State Suggest a trial state \(\ket{\psi_T(\gamma)}\).
+\State Compute the trial energy \(E_T\) as a function of \(\gamma\):
+\[E_T(\gamma)=\frac{\bra{\psi_T(\gamma)}\hatHH\ket{\psi_T(\gamma)}}{\braket{\psi_T(\gamma)}}\]
+\State Minimise \(E_T\) with respect to \(\gamma\).
+\State Choose the optimal \(\ket{\psi_T(\gamma)}\) based on the \(\gamma\) that minimises \(E_T\).
 
 \noindent The resulting optimal \(E_T\) is an upper bound on the ground state energy, while the corresponding trial state is the optimal approximation of the ground state.
 \end{algorithmic}
 \end{algorithm}
-Due to computational aspects, a common variant of the algorithm is to have the process of minimsation of \(E_T\) be integrated in a loop over different parameters \(\alpha\).
+Due to computational aspects, a common variant of the algorithm is to have the process of minimsation of \(E_T\) be integrated in a loop over different parameters \(\gamma\).
 \subsubsection{The Coulomb interaction}
 An interesting, although somewhat discouraging, reality is that one of the fundamental interactions of nature, the Coulomb interaction, is more or less analytically unsolvable for everything but the simplest of systems. The Hydrogen is one such system in which the interaction is perfectly solvable. On the other hand, the second simplest element, Helium, is not. The problem arises from the electron-electron interaction:
 \begin{equation}\label{eq:electron_electron_Coulomb_interaction}
-V_{e^-e^-}=\frac{e^2}{4\pi\varepsilon_0}\frac{1}{|\vb{r}_1-\vb{r}_2|}=\frac{k_ee^2}{|\vb{r}_1-\vb{r}_2|}
+V_{e^-e^-}=\frac{k_ee^2}{|\vb{r}_1-\vb{r}_2|}=\frac{1}{|\vb{r}_1-\vb{r}_2|}
 \end{equation}
-where \(\varepsilon_0\) is the permittivity of free space, \(k_e=1/4\pi\varepsilon_0\) is Coulomb's constant, and \(\vb{r}_1\) and \(\vb{r}_2\) are the positions of electron 1 and 2. In general, given \(N\) particles of change \(q_i\), the total electric potential energy is
-\begin{equation}\label{eq:general_Coulomb_interaction}
-V_C=\frac{k_e}{2}\sum_{i=1}^N\sum_{{\tiny\mqty{j=1\\j\neq i}}}^N\frac{q_iq_j}{|\vb{r}_i-\vb{r}_j|}
-\end{equation}
-where the \(1/2\) factor ensures that the potential is equally shared between the symmetric \(q_i\)-\(q_j\) and \(q_j\)-\(q_i\) interactions. An equivalent and more computationally friendly way of expressing \eqref{eq:general_Coulomb_interaction} is
-\begin{equation}\label{eq:general_Coulomb_interaction_friendly_expression}
-V_C=k_e\sum_{j=2}^N\sum_{i=1}^{j-1}\frac{q_iq_j}{|\vb{r}_i-\vb{r}_j|}
-\end{equation}
+where \(\vb{r}_1\) and \(\vb{r}_2\) are the positions of electron 1 and 2.
 \subsection{Quantum Mechanics - The Harmonic Oscillator}
 The harmonic oscillator is one of the finest achivements of quantum mechanics with applications in many areas of physics and other sciences. The following section will present the algebraic solution to the harmonic oscillator Hamiltonian, and generalise the results to an \(N\)-dimensional system of oscillators.
 \subsubsection{The single harmonic oscillator}
@@ -149,13 +154,13 @@ The potential energy of a single-degree classical harmonic oscillator with oscil
 where \(\hat{p}=\hat{\vb{p}}\cdot\vb{e}_x\) is the system's momentum operator. The problem at hand is to find the energy eigenkets of the Hamiltonian. This will be done using the so-called \emph{ladder operators}:\footnote{These operators have several names, e.g. \emph{raising/lowering} operators, \emph{creation/annahilation} operators, etc.}
 \begin{subequations}\label{eq:harmonic_oscillator_ladder_operators}
 \begin{align}
-        \hat{a}&=\frac{1}{\sqrt{2\hbar m\omega}}\big(+i\hat{p}+m\omega\hat{x}\big)\\
-\hat{a}^\dagger&=\frac{1}{\sqrt{2\hbar m\omega}}\big(-i\hat{p}+m\omega\hat{x}\big)
+        \hat{a}&=\frac{1}{\sqrt{2m\omega}}\big(+i\hat{p}+m\omega\hat{x}\big)\\
+\hat{a}^\dagger&=\frac{1}{\sqrt{2m\omega}}\big(-i\hat{p}+m\omega\hat{x}\big)
 \end{align}
 \end{subequations}
 One can easily show that the ladder operators satisfy the commutation relation \([\hat{a},\hat{a}^\dagger]=1\). Rewriting \(\hat{x}\) and \(\hat{p}\) in terms of \(\hat{a}\) and \(\hat{a}^\dagger\), one finds that the Hamiltonian can be written as
 \begin{equation}
-\hatHH_\text{HO}=\hbar\omega\bigg(\hat{a}^\dagger\hat{a}+\frac{1}{2}\bigg)=\hbar\omega\bigg(\hat{a}\hat{a}^\dagger-\frac{1}{2}\bigg)
+\hatHH_\text{HO}=\omega\bigg(\hat{a}^\dagger\hat{a}+\frac{1}{2}\bigg)=\omega\bigg(\hat{a}\hat{a}^\dagger-\frac{1}{2}\bigg)
 \end{equation}
 It turns out that the energy eigenkets can be uniquely labelled using a single non-negative integer index \(n\): \(\ket{n}\). Furthermore, the action of ladder operators on the energy eigenkets raises or lowers \(n\) as follows:
 \begin{equation}\label{eq:ladder_operations}
@@ -163,7 +168,7 @@ It turns out that the energy eigenkets can be uniquely labelled using a single n
 \end{equation}
 Note that \(n<0\) is avoided as \(\hat{a}\ket{0}=0\).\footnote{This is actually somewhat missleading, but it originates in the derivation of the harmonic oscillator energies. By requiring non-negative energies, one finds that the ``ladder of energy eigenkets'' must be truncated in order to avoid \(\braket{n}<0\). This truncation is also the origin of the index \(n\).} It follows that \(\hat{a}^\dagger\hat{a}\ket{n}=n\ket{n}\) such that
 \begin{equation}\label{eq:harmonic_oscillator_energies}
-\hatHH_\text{HO}\ket{n}=\hbar\omega\bigg(n+\frac{1}{2}\bigg)\ket{n}=E_n\ket{n}
+\hatHH_\text{HO}\ket{n}=\omega\bigg(n+\frac{1}{2}\bigg)\ket{n}=E_n\ket{n}
 \end{equation}
 The energy eigenkets can be uniquely described in terms of \(\ket{0}\) and \(\hat{a}^\dagger\) via
 \begin{equation}\label{eq:harmonic_oscillator_eigenkets}
@@ -182,7 +187,9 @@ Suppose a quantum system subject to a harmonic potential is in the energy eigenk
 \end{align}
 \end{subequations}
 Rewriting \(\hat{x}\) and \(\hat{p}\) in terms of \(\hat{a}\) and \(\hat{a}^\dagger\) results in:
-\[\hat{x}^2=\frac{\hbar}{2m\omega}\big(\hat{a}^\dagger+\hat{a}\big)^2\qand\hat{p}^2=-\frac{m\hbar\omega}{2}\big(\hat{a}^\dagger-\hat{a}\big)^2\]
+\begin{align*}
+\hat{x}^2=\frac{1}{2m\omega}\big(\hat{a}^\dagger+\hat{a}\big)^2\qand\hat{p}^2=-\frac{m\omega}{2}\big(\hat{a}^\dagger-\hat{a}\big)^2
+\end{align*}
 The ladder operator polynomials are:
 \begin{align*}
 \big(\hat{a}^\dagger+\hat{a}\big)^2&=\hat{a}^\dagger\hat{a}^\dagger+\hat{a}^\dagger\hat{a}+\hat{a}\hat{a}^\dagger+\hat{a}\hat{a}\\
@@ -194,14 +201,14 @@ Hence,
 \begin{widetext}
 \begin{subequations}\label{eq:harmonic_oscillator_kinetic_and_potential_action}
 \begin{align}
-\hat{K}\ket{n}&=-\frac{\hbar\omega}{4}\bigg[\sqrt{(n+1)(n+2)}\ket{n+2}+\sqrt{n(n-1)}\ket{n-2}-2n\ket{n}-\ket{n}\bigg]\\
-\hat{V}\ket{n}&=+\frac{\hbar\omega}{4}\bigg[\sqrt{(n+1)(n+2)}\ket{n+2}+\sqrt{n(n-1)}\ket{n-2}+2n\ket{n}+\ket{n}\bigg]
+\hat{K}\ket{n}&=-\frac{\omega}{4}\bigg[\sqrt{(n+1)(n+2)}\ket{n+2}+\sqrt{n(n-1)}\ket{n-2}-2n\ket{n}-\ket{n}\bigg]\\
+\hat{V}\ket{n}&=+\frac{\omega}{4}\bigg[\sqrt{(n+1)(n+2)}\ket{n+2}+\sqrt{n(n-1)}\ket{n-2}+2n\ket{n}+\ket{n}\bigg]
 \end{align}
 \end{subequations}
 \end{widetext}
 It follows then that
 \begin{equation}
-\expval{K}_n=\expval{V}_n=\frac{E_n}{2}=\frac{\hbar\omega}{2}\bigg(n+\frac{1}{2}\bigg)
+\expval{K}_n=\expval{V}_n=\frac{E_n}{2}=\frac{\omega}{2}\bigg(n+\frac{1}{2}\bigg)
 \end{equation}
 That is, for a single harmonic oscillator with oscillation frequency \(\omega\) in an energy eigenstate, the expected kinetic and potential energy is the same.
 
@@ -222,25 +229,25 @@ It is not immediately obvious from \eqref{eq:harmonic_oscillator_expected_kineti
 &=\sum_n\sum_m\alpha_n^*\alpha_m\bra{n}\big(\hat{K}-\hat{V}\big)\ket{m}
 \end{align*}
 must be equal to zero. The braket can be simplified by inserting \eqref{eq:harmonic_oscillator_kinetic_and_potential_action}:
-\[-\frac{\hbar\omega}{2}\bigg[\sqrt{(m+1)(m+2)}\delta_{n,m+2}+\sqrt{m(m-1)}\delta_{n,m-2}\bigg]\]
+\[-\frac{\omega}{2}\bigg[\sqrt{(m+1)(m+2)}\delta_{n,m+2}+\sqrt{m(m-1)}\delta_{n,m-2}\bigg]\]
 which in turn yields:
 \begin{align*}
 &\bra{\psi}\big(\hat{K}-\hat{V}\big)\ket{\psi}=\\
-&-\frac{\hbar\omega}{2}\sum_n\alpha_n^*\Big(\alpha_{n-2}\sqrt{(n-1)n}+\alpha_{n+2}\sqrt{(n+2)(n+1)}\Big)
+&-\frac{\omega}{2}\sum_n\alpha_n^*\Big(\alpha_{n-2}\sqrt{(n-1)n}+\alpha_{n+2}\sqrt{(n+2)(n+1)}\Big)
 \end{align*}
 As this expression is not necessarily 0 for any state \(\ket{\psi}\), it is not necessarily true that \(\expval{K}\) is equal to \(\expval{V}\).
 
 \subsubsection{The harmonic oscillator eigenfunctions}
-Having found the algebraic solution to the harmonic oscillator problem, the next step is to express the eigenkets in the position basis. The simplest eigenstate is the ground state, for which \(E_0=\hbar\omega/2\). Inserting \(\hat{x}=x\) and \(\hat{p}=-i\hbar\partial_x\) into \eqref{eq:Hamiltonian_harmonic_oscillator} yields:
-\[\HH_\text{HO}=\frac{-\hbar^2}{2m}{\partial_x}^2+\frac{1}{2}\omega^2x^2\]
-It is difficult to work with a plethora of constants and variables, thus consider the dimensionless variable \(\xi=\sqrt{m\omega/\hbar}x\) with correpsonding derivative \(\partial_\xi=\sqrt{m\omega/\hbar}\partial_x\). Written in terms of \(\xi\), the equation \(\hatHH\ket{0}=\frac{1}{2}\hbar\omega\ket{0}\) may be written as
-\[\frac{-\hbar\omega}{2}{\partial_\xi}^2\psi_0(\xi)+\frac{\hbar\omega}{2}\xi^2\psi_0(\xi)=\frac{\hbar\omega}{2}\psi_0(\xi)\]
+Having found the algebraic solution to the harmonic oscillator problem, the next step is to express the eigenkets in the position basis. The simplest eigenstate is the ground state, for which \(E_0=\omega/2\). Inserting \(\hat{x}=x\) and \(\hat{p}=-i\partial_x\) into \eqref{eq:Hamiltonian_harmonic_oscillator} yields:
+\[\HH_\text{HO}=\frac{-1}{2m}{\partial_x}^2+\frac{1}{2}m\omega^2x^2\]
+It is difficult to work with a plethora of constants and variables, thus consider the dimensionless variable \(\xi=\sqrt{m\omega}x\) with correpsonding derivative \(\partial_\xi=\sqrt{m\omega}\partial_x\). Written in terms of \(\xi\), the equation \(\hatHH\ket{0}=\frac{1}{2}\omega\ket{0}\) may be written as
+\[\frac{-\omega}{2}{\partial_\xi}^2\psi_0(\xi)+\frac{\omega}{2}\xi^2\psi_0(\xi)=\frac{\omega}{2}\psi_0(\xi)\]
 where \(\psi_0(\xi)=\braket{\xi}{0}\) is the ground state wave function. The solution is
 \begin{equation}\label{eq:harmonic_oscillator_ground_state_position_basis}
-\psi_0(\xi)=\bigg(\frac{m\omega}{\pi\hbar}\bigg)^{1/4}e^{-\xi^2/2}=Ce^{-\xi^2/2}
+\psi_0(\xi)=\bigg(\frac{m\omega}{\pi}\bigg)^{1/4}e^{-\xi^2/2}=Ce^{-\xi^2/2}
 \end{equation}
 Because the ground state is known, equation \eqref{eq:harmonic_oscillator_eigenkets} implies that the excited states may be found by successive application of \(\hat{a}^\dagger\). In terms of \(\xi\) and \(\partial_\xi\), \(\hat{a}^\dagger\) is:
-\[a^\dagger=\frac{1}{\sqrt{2m\hbar\omega}}\big(-\hbar\partial_x+m\omega x\big)=\frac{1}{\sqrt{2}}\big(\xi-\partial_\xi\big)\]
+\[a^\dagger=\frac{1}{\sqrt{2m\omega}}\big(-\partial_x+m\omega x\big)=\frac{1}{\sqrt{2}}\big(\xi-\partial_\xi\big)\]
 Computing \((a^\dagger)^n\psi_0/\sqrt{n!}\) becomes incredibly inefficient for large \(n\). However, it is actually unecessary because there exists exact solutions in terms of the so-called \emph{Hermite polynomials}. These polynomials, commonly denoted by \(H\), are solutions to the differential equation:
 \begin{equation}\label{eq:Hermite_differential_equation}
 \bigg[{\partial_\xi}^2-2\xi\partial_\xi+\big(\lambda-1\big)\bigg]H(\xi)=0
@@ -263,7 +270,7 @@ Moreover, the Hermite polynomials satisfy the orthogonality condition:
 
 The harmonic oscillator energy eigenfunctions are expressed in terms of the Hermite polynomails as:
 \begin{equation}\label{eq:harmonic_oscillator_energy_eigenfunctions}
-\psi_n(x)=\frac{C}{\sqrt{2^nn!}}H_n(\xi)e^{-\xi^2/2}\qcomma\xi=\sqrt{\frac{m\omega}{\hbar}}x
+\psi_n(x)=\frac{C}{\sqrt{2^nn!}}H_n(\xi)e^{-\xi^2/2}\qcomma\xi=\sqrt{m\omega}x
 \end{equation}
 (where \(C\) is the same as before.) While this equation may seem completely unmotivated, it can easily be shown from an argument of induction. The \(n=0\) case is easy:
 \[\braket{\xi}{0}=\frac{C}{\sqrt{2^00!}}H_0(\xi)e^{-\xi^2/2}=Ce^{-\xi^2/2}=\psi_0(\xi)\]
@@ -282,36 +289,36 @@ Mathematically speaking, the Hamiltonian of a composite system with \(N\) harmon
 \hatHH^\text{sys}=\hatHH_\text{HO}\otimes\cdots\otimes\hat{I}+\cdots+\hat{I}\otimes\cdots\otimes\hatHH_\text{HO}
 \end{equation}
 But this is tedius to write, thus let the \(i^\text{th}\) term (i.e., the term where the \(i^\text{th}\) component of the tensor product is \(\hatHH_{HO}\)) be denoted by \(\hatHH_\text{HO}^i\) such that the above expression simplifies to equation \eqref{eq:Composite_Hamiltonian}. The system's energy eigenkets are
-\begin{equation}
+\begin{equation}\label{eq:composite_harmonic_oscillator_state}
 \ket{\psi}=\ket{n_1,\ldots,n_N}=\ket{n_1}\otimes\cdots\otimes\ket{n_N}
 \end{equation}
 where each \(\ket{n}\) is the regular harmonic oscillator energy eigenkets. Because \(\hatHH_\text{HO}^i\) only acts on the \(i^\text{th}\) component of the tensor product, only the energy index \(n_i\) is affected:
 \begin{equation}
-\hatHH_\text{HO}^i\ket{\psi}=\hbar\omega_i\bigg(n_i+\frac{1}{2}\bigg)\ket{\psi}
+\hatHH_\text{HO}^i\ket{\psi}=\omega_i\bigg(n_i+\frac{1}{2}\bigg)\ket{\psi}
 \end{equation}
 where \(\omega_i\) is the oscillation frequency of the \(i^\text{th}\) harmonic oscillator. It follows that the composite system's energy eigenvalues are
 \begin{equation}\label{eq:composite_harmonic_oscillator_energy}
-\hatHH^\text{sys}\ket{\psi}=\hbar\Bigg[\omega_1\bigg(n_1+\frac{1}{2}\bigg)+\cdots+\omega_N\bigg(n_N+\frac{1}{2}\bigg)\Bigg]\ket{\psi}
+\hatHH^\text{sys}\ket{\psi}=\Bigg[\omega_1\bigg(n_1+\frac{1}{2}\bigg)+\cdots+\omega_N\bigg(n_N+\frac{1}{2}\bigg)\Bigg]\ket{\psi}
 \end{equation}
 This expression greatly simplifies when the oscillation frequency is uniform (i.e. \(\omega_i=\omega\)):
 \begin{equation}\label{eq:composite_harmonic_oscillator_energy_unifreq}
-\hatHH^\text{sys}\ket{\psi}=\hbar\omega\bigg(n_1+\cdots+n_N+\frac{N}{2}\bigg)\ket{\psi}
+\hatHH^\text{sys}\ket{\psi}=\omega\bigg(n_1+\cdots+n_N+\frac{N}{2}\bigg)\ket{\psi}
 \end{equation}
 The ground state (\(n_i=0\)) energy of the composite harmonic oscillator with uniform frequency is therefore
 \begin{equation}\label{eq:composite_harmonic_oscillator_ground_energy}
-E_g=\hbar\omega\frac{N}{2}
+E_g=\omega\frac{N}{2}
 \end{equation}
 
 If all oscillators are in an energy eigenstate, then \(\expval{K}_n=\expval{V}_n\) implies that the total expected kinetic energy is equal to the total expected potential energy.
 \subsection{Markov Chain Monte Carlo Methods}
 \subsubsection{Monte Carlo integration}
-One of the most versatile approaches to numerical integration is Monte Carlo integration. Its clever exploit of stochastic variables allows it to tackle high-dimensional integrals with little extra effort.
+One of the most versatile approaches to numerical integration is Monte Carlo integration. Its clever exploit of stochastic variables allows it to tackle high-dimensional integrals with little extra effort. There are several ways to develop a formalism for Monte Carlo integration, the one presented below is adapted to suit the needs of this project.
 
 The goal of Monte Carlo integration is to evaluate integrals on the form:
 \begin{equation}\label{eq:general_integral}
 I=\int_D\dd{x}f(x)\qc x\in D
 \end{equation}
-where \(x\) is not necessarily one-dimensional. Let \(p(x)\) denote a known distribution and consider the change of variables from \(x\) to \(p(x)\):
+where \(x\) is not necessarily one-dimensional. Now let \(p(x)\) denote a known distribution and consider the change of variables from \(x\) to \(p(x)\):
 \begin{equation}\label{eq:integral_to_expected_value}
 \int_D\dd{x}f(x)=\int_{x\in D}\dd{p(x)}\,\frac{f(x)}{p(x)}=\expval{\frac{f(x)}{p(x)}}_{p(x)}
 \end{equation}
@@ -397,7 +404,7 @@ The Metropolis-Hastings algorithm may now be stated:
 	\Else
 		\State Draw a uniformly distributed number \(a\in[0,1]\).
 		\NoThenIf {\(a\leq\alpha(y,x)\):}
-			\State Accept \(y\).
+			\State Accept \(y\) and set \(X_{n+1}=y\).
 		\Else
 			\State Reject \(y\) and set \(X_{n+1}=X_n\).
 		\EndIf
@@ -414,17 +421,131 @@ As previously mentioned, this project will implement the Metropolis algorithm, w
 \alpha_\text{M}(y,x)=\min\left\lbrace1,\frac{p(y)}{p(x)}\right\rbrace
 \end{equation}
 
-
-
-
-
-
-
-
-
-
-
 \section{Method}
+The aim of this project is to study 2 electrons in a uniform harmonic oscillator potential who interact via the Coulomb interaction. Despite its simplicity, there does not exist an analytical solution to the problem, which is why the system has been extensively studied both analytically and computationally. Before continuing to the computational aspects of the project, some preparation is required.
+\subsection{Preparation}
+\subsubsection{Some exact results}
+Say a single electron is located in a three-dimensional harmonic oscillator (with uniform oscillation frequency), it follows from \eqref{eq:composite_harmonic_oscillator_state} and \eqref{eq:harmonic_oscillator_energy_eigenfunctions} that the system's wave function \(\psi(x,y,z)\) (ignore spin for the time being) is proportional to\footnote{The normalization constant is ignored as the variational method accounts for unnormalized states.}
+\begin{equation*}
+H_{n_x}(\sqrt{\omega}x)H_{n_y}(\sqrt{\omega}y)H_{n_z}(\sqrt{\omega}z)e^{-\displaystyle\frac{\omega}{2}(x^2+y^2+z^2)}
+\end{equation*}
+where \(n_x\), \(n_y\) and \(n_z\) are the energy labels of the individual oscillators. This is clearly symmetric under the interchange of any two energy labels, hence the spatial state of the electron is symmetric. Introducing another electron to the picture results in a total wave function of
+\[\Psi=\psi(x_1,y_1,z_1)\cdot\psi(x_2,y_2,z_2)\]
+which clearly is symmetric under the interchange of particles. As electrons are fermions, it is necessary for their complete state to be anti-symmetric under the interchange of particles, and because the spatial state is symmetric, it is therefore necessary for the spin state to be anti-symmetric. Out of the four possible combinations of two spin-1/2 fermions, there is only one anti-symmetric state, the \emph{singlet} state:
+\[\ket{\chi}=\frac{1}{\sqrt{2}}\big(\ket{\uparrow\downarrow}-\ket{\downarrow\uparrow}\big)\]
+whose total spin is 0. Lastly, it follows from \eqref{eq:composite_harmonic_oscillator_energy_unifreq} that the energy of this electron-electron system is
+\begin{equation}
+E_\text{HO}^\text{tot}=\omega\big(n_{x_1}+n_{x_2}+n_{y_1}+n_{y_2}+n_{z_1}+n_{z_2}+3\big)
+\end{equation}
+Hence, the ground state energy is \(3\omega\).
+
+Now consider the same pair of electrons, but with an additional Coulomb interaction. The Hamiltonian for this system is
+\begin{equation}\label{eq:main_hamiltonian_operator}
+\hatHH^\text{sys}=\hatHH_\text{HO}^1+\hatHH_\text{HO}^2+\hat{V}_{e^-e^-}
+\end{equation}
+where \(\hatHH_\text{HO}^i\) denotes the three-dimensional harmonic oscillator Hamiltonian for particle \(i\) and \(V_{e^-e^-}\) is the electron-electron Coulomb interaction potential. This is the system to be studied in the project, thus any future reference to the ``\emph{electron-electron system}'' should be interpreted explicitly as this refering to \eqref{eq:main_hamiltonian_operator}. Written in the position basis the Hamiltonian becomes
+\begin{equation}\label{eq:main_hamiltonian_position_basis}
+\HH^\text{sys}=-\frac{1}{2}\big(\nabla_1^2+\nabla_2^2\big)+\frac{1}{2}\omega^2(r_1^2+r_2^2)+\frac{1}{r_{12}}
+\end{equation}
+\subsubsection{Trial wave functions}
+The project will use the following two trial wave functions:
+\begin{subequations}\label{eq:trial_wavefunctions}
+\begin{align}
+\psi_T^1(\vb{r}_1,\vb{r}_2)&=e^{-\alpha\frac{\omega}{2}(r_1^2+r_2^2)}\\
+\psi_T^2(\vb{r}_1,\vb{r}_2)&=e^{-\alpha\frac{\omega}{2}(r_1^2+r_2^2)}e^{\frac{r_{12}}{2(1+\beta r_{12})}}
+\end{align}
+\end{subequations}
+where \(\vb{r}_i=(x_i,y_i,z_i)\), \(r_i^2=x_i^2+y_i^2+z_i^2\), \(r_{12}=||\vb{r}_1-\vb{r}_2||\), and \(\alpha\) and \(\beta\) are variational parameters.
+
+Clearly, \(\psi_T^1\) and \(\psi_T^2\) are not energy eigenstates of \(\HH^\text{sys}\), so they do not have sharp energies. The average energy is given by \(\bra{\psi_T}\hatHH^\text{sys}\ket{\psi_T}/\braket{\psi_T}\), which means it is interesting to know how \(\HH^\text{sys}\psi_T\) looks like. Applying \eqref{eq:main_hamiltonian_position_basis} to the trial wave functions yields:
+\begin{widetext}
+\begin{subequations}\label{eq:main_hamiltonian_act_on_trial_wavefunctions}
+\begin{align}
+\HH^\text{sys}\psi_T^1&=\bigg[3\alpha\omega+\frac{1}{2}\omega^2(r_1^2+r_2^2)(1-\alpha^2)+\frac{1}{r_{12}}\bigg]\psi_T^1=E^1\psi_T^1\\
+\HH^\text{sys}\psi_T^2&=\bigg[E^1+\frac{1}{2(1+\beta r_{12})^2}\Big(\alpha\omega r_{12}-\frac{2}{r_{12}}+\frac{2\beta}{1+\beta r_{12}}-\frac{1}{2(1+\beta r_{12})^2}\Big)\bigg]\psi_T^2=E^2\psi_T^2
+\end{align}
+\end{subequations}
+\end{widetext}
+Note that \(E^1\) and \(E^2\) are not energies as \(\psi_T^1\) and \(\psi_T^2\) are not normalized, their inclusion is merely to avoid having to type out \eqref{eq:main_hamiltonian_act_on_trial_wavefunctions} more than once. Moreover, note also that \(E^1\) and \(E^2\) are not constants as they depend on \(\vb{r}_1\) and \(\vb{r}_2\).
+\subsection{Variational Monte Carlo Algorithm}
+The ``Variational Monte Carlo Algorithm'' is a mixture of the variational method and Markov Chain Monte Carlo methods. Recall the definition of the trial energy \(E_T(\gamma)\) in the variational method:
+\[E_T(\gamma)=\frac{\bra{\psi_T(\gamma)}\hatHH\ket{\psi_T(\gamma)}}{\braket{\psi_T(\gamma)}}\]
+Inserting \(\psi_T^i\) and \eqref{eq:main_hamiltonian_act_on_trial_wavefunctions} into \(E_T(\gamma)\) yields:
+\begin{equation*}
+E_T^i(\alpha,\beta)=\frac{\int\dd{\vb{r}_1}\dd{\vb{r}_2}E^i(\vb{r}_1,\vb{r}_2)|\psi_T^i|^2}{\int\dd{\vb{r}_1}\dd{\vb{r}_2}|\psi_T^i|^2}
+\end{equation*}
+Within the contex of variational Monte Carlo, \(E^i(\vb{r}_1,\vb{r}_2)\) is usually referred to as the \emph{local} energy. Note that the bottom integral is just a number, specifically the norm of \(\psi_T^i\). With this in mind, define the probability density:
+\begin{equation}
+p_{\alpha,\beta}^i=\frac{|\psi_T^i|^2}{\int\dd{\vb{R}}|\psi_T^i|^2}
+\end{equation}
+where \(\vb{R}=(\vb{r}_1,\vb{r}_2)\) is the state of the electron-electron system. Inserting \(p_{\alpha,\beta}^i\) back into \(E_T^i(\alpha,\beta)\) yields:
+\begin{equation}
+E_T^i(\alpha,\beta)=\int\dd{\vb{R}}E^i(\vb{r}_1,\vb{r}_2)p_{\alpha,\beta}^i
+\end{equation}
+This is on the form of equation \eqref{eq:integral_to_expected_value} and thus the integral may be estimated by the sample extected value of \(E_T^i(\vb{R})\) with random values \(\vb{R}\) drawn from \(p_{\alpha,\beta}^i\).
+
+To sample random values directly from \(p_{\alpha,\beta}^i\) is in general quite difficult (mostly because of the integral in the denominator), thus the (symmetric) Metropolis algorithm will be used instead. The stability of the Metropolis sampling will be verified using the variance of \(E_T^i(\alpha,\beta)\). Apart from including a term \(E^2\) in the algorithm, no additional adjustments are necessary to encompass the variance estimation.
+
+Let \(\vb{R}_n\) denote the state at step \(n\) in the Markov chain. The Metropolis choice is then
+\begin{equation*}
+\alpha_M^i(\vb{R}_{n+1},\vb{R}_n)=\min\left\lbrace1,\frac{p_{\alpha,\beta}^i(\vb{R}_{n+1})}{p_{\alpha,\beta}^i(\vb{R}_n)}\right\rbrace=\min\left\lbrace1,A_i\right\rbrace
+\end{equation*}
+where \(A_i\) is introduced for simplicity. By definition, \(A_i\) must be equal to \(|\psi_T^i(\vb{R}_{n+1})|^2/|\psi_T^i(\vb{R}_n)|^2\), hence:
+\begin{subequations}\label{eq:VMC_probability_ratios}
+\begin{align}
+A_1&=\exp\Big[-\alpha\omega\big(||\vb{R}_{n+1}||^2-||\vb{R}_n||^2\big)\Big]\\
+A_2&=A_1\exp\bigg[\frac{r_{12,n+1}}{1+\beta r_{12,n+1}}-\frac{r_{12,n}}{1+\beta r_{12,n}}\bigg]
+\end{align}
+\end{subequations}
+where \(||\vb{R}_n||^2=r_{1,n}^2+r_{2,n}^2\).
+
+The symmetric Metropolis algorithm requires that \(p_{\alpha,\beta}^i(\vb{R}|\vb{R}')=p_{\alpha,\beta}^i(\vb{R}'|\vb{R})\). One way to accomodate this is to propose new states \(\vb{R}'\) from \(\vb{R}\) according to
+\begin{equation}
+\vb{R}'=\vb{R}+\hat{\delta}
+\end{equation}
+where \(\hat{\delta}\sim\mathcal{U}_6(-\delta,\delta)\) is a vector of random numbers. Now, the idea is to control the average Metropolis sampling acceptance ratio using \(\delta\). Ideally the acceptance ratio should be \(\approx50\)\%. To do this, consider the exponent of \(A_1\) using the triangle inequality:
+\[||\vb{R}_{n+1}||^2-||\vb{R}_n||^2=||\vb{R}_n+\hat{\delta}||^2-||\vb{R}_n||^2\leq||\hat{\delta}||^2\]
+To achieve an acceptance ratio of about 50\%, one would need \(A_i\approx1/2\). Using the approximation above:
+\[\frac{1}{2}\approx e^{-\alpha\omega||\hat{\delta}||^2}\implies||\hat{\delta}||^2\approx\frac{\ln(2)}{\alpha\omega}\]
+Now, instead of trying to approximate \(\delta\) from \(||\hat{\delta}||^2\) (which would be the reasonable approach), trial and error showed that simply defining
+\begin{equation}
+\delta=\frac{\ln(2)}{\alpha\omega}
+\end{equation}
+produces excellent acceptance ratios when \(i=1\) and \(\alpha=\omega=1\). Seeing that \(\delta\) really is a parameter regardless, no further treatment will be made.
+
+The final Variational Monte Carlo Algorithm is listed below, note that it does not loop over \(\alpha\) and \(\beta\). This is intential (different experiments loop over different parameters). It is essentially a mixture of Algorithms \ref{algo:Metropolis_Hastings} and \ref{algo:standard_Monte_Carlo}, however with a clever manipulation of the double \texttt{if}-test inside the Metropolis loop. The initial \texttt{if}-test is actually uneccesary if \(\alpha_M\) is directly defined as \(p_{\alpha,\beta}^i(\vb{R}')/p_{\alpha,\beta}^i(\vb{R})\). This follows because of the fact that \(b\leq1\) (see algorithm). Consider the following: If \(A_i\) is greater than 1, then it is necessarily greater than b. Hence, defining \(\alpha_M\) as the ratio of the probabilities and ignoring the first \texttt{if}-test produces the same result as what is described in Algorithm \ref{algo:Metropolis_Hastings}.
+
+\begin{algorithm}[H]
+\caption{The Varitational Monte Carlo Algorithm}\label{algo:Metropolis_Hastings}
+\begin{algorithmic}[1]
+\State Initialize \(\alpha\), \(\beta\) and \(i\).
+\State Initialize \(N_\text{MC}\), \(\delta\) and \(\vb{R}\).
+\State Compute \(|\psi_T i(\vb{R})|^2\).
+\State Initialize \(E=0\) and \((E^2)=0\).
+\NoDoFor {\(n=1,\ldots,N_\text{MC}\)}
+	\State Draw \(a\) according to \(\mathcal{U}(0,1)\).
+	\State Propose \(\vb{R}'=\vb{R}+\vb{1}\delta a\).
+	\State Compute: \(\alpha_M=A_i\)
+	\State Draw \(b\) according to \(\mathcal{U}(0,1)\).
+	\NoThenIf {\(b\leq\alpha_M\):}
+		\State Update \(\vb{R}=\vb{R}'\).
+	\EndIf
+	\State Add \(E^i(\vb{R})\) to \(E\).
+	\State Add \(E^i(\vb{R})^2\) to \((E^2)\).
+\EndFor
+\State Normalize the Monte Carlo integrals:
+\[E_T^i(\alpha,\beta)=\frac{E}{N_\text{MC}}\qand \text{Var}\big[E_T^i(\alpha,\beta)\big]=\frac{(E^2)}{N_\text{MC}}-\bigg(\frac{E}{N_\text{MC}}\bigg)^2\]
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Experiments}
+The following section discusses the experiments run in this project.
+\subsubsection{Experiment 1}
+
+
+
+
+
 
 \section{Results}
 
