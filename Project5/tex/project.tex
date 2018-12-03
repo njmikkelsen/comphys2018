@@ -1,0 +1,447 @@
+\documentclass[nofootinbib,reprint,english]{revtex4-1}
+
+% language
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+
+% standard setup
+\usepackage{physics,amssymb,array}
+\usepackage{xcolor,graphicx,hyperref}
+\usepackage{tikz,listings,multirow}
+\usepackage{algpseudocode,algorithm}
+\usepackage{subcaption}
+\usepackage{enumitem}
+
+% tikz libraries
+\usetikzlibrary{matrix}
+
+% hyperref coloring
+\hypersetup{ %
+  colorlinks,
+  linkcolor={red!50!black},
+  citecolor={blue!50!black},
+  urlcolor={blue!80!black}}
+
+% lstlisting coloring
+\lstset{ %
+  inputpath=,
+  backgroundcolor=\color{white!88!black},
+  basicstyle={\ttfamily\scriptsize},
+  commentstyle=\color{magenta},
+  language=Python,
+  tabsize=2,
+  numbers=left,
+  stringstyle=\color{green!55!black},
+  frame=single,
+  keywordstyle=\color{blue},
+  showstringspaces=false,
+  columns=fullflexible,
+  keepspaces=true}
+
+\DeclareTextSymbolDefault{\dh}{T1}
+
+% no "do"'s or "then"'s
+\algdef{SE}[FOR]{NoDoFor}{EndFor}[1]{\algorithmicfor\ #1}{\algorithmicend\ \algorithmicfor}
+\algdef{SE}[FORALL]{NoDoForAll}{EndFor}[1]{\algorithmicfor\ #1}{\algorithmicend\ \algorithmicfor}
+\algdef{SE}[IF]{NoThenIf}{EndIf}[1]{\algorithmicif\ #1}{\algorithmicend\ \algorithmicif}
+
+% spin-configuration table columns
+\newcolumntype{M}[1]{>{\centering\arraybackslash}m{#1}}
+\newcolumntype{N}{@{}m{0pt}@{}}
+
+% shortcuts
+\newcommand{\hatHH}{\hat{\mathcal{H}}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\Sspace}{\mathcal{S}}
+
+\begin{document}
+% titlepage
+\title{FYS3150 Computational Physics - Project 5\\Variational Monte Carlo}
+\author{Nils Johannes Mikkelsen}
+\date{\today}
+\noaffiliation
+\begin{abstract}
+
+\end{abstract}
+\maketitle
+All material written for project 5 may be found at:\\
+{\scriptsize\url{https://github.com/njmikkelsen/comphys2018/tree/master/Project5}}
+\section{Introduction}
+
+\section{Theory}
+\subsection{Quantum Mechanics - Miscellaneous}
+The reader is assumed to be familiar with most of the basic features of quantum mechanics such as Dirac notation, the notion of kets and Hilbert spaces, quantum spin, composite systems, etc. Nonetheless, the following sections introduce some of the basic aspects of quantum mechanics that are readily applied and studied in this project.
+\subsubsection{Notation}
+First and foremost, kets and bras are depicted as usual, e.g. \(\ket{\psi}\) and \(\bra{\phi}\). The hermiation conjugate of some object \(c\) is denoted by a dagger: \(c^\dagger\). In general, operators are denoted by upper case letters and constants by lower case letters, although exceptions such as the canonical operators and ladder operators do exist. Furthermore, operators are denoted by an additional ''hat" in the absence of a particular basis. For example, the canonical operators \(\hat{\vb{r}}\) and \(\hat{\vb{p}}\) expressed in the position basis \(\ket{\vb{r}}\), are given by:
+\begin{equation}
+\vb{r}\qand\vb{p}=-i\hbar\nabla
+\end{equation}
+Moreover, the single-system Hamiltonian for a system with mass \(m\) in a potential \(V\):
+\begin{subequations}
+\begin{align}
+\hatHH=\frac{\hat{\vb{p}}^2}{2m}+V(\hat{\vb{r}},\hat{\vb{p}})\\
+\intertext{thus takes the following form in the position basis:}
+\HH=\frac{-\hbar^2}{2m}\nabla^2+V(\vb{r},-i\hbar\nabla)
+\end{align}
+\end{subequations}
+Unless otherwise specified, all operators are expressed in the continuous position basis. Provided a classical operator \(O\), the corresponding quantum operator \(\hat{O}\) is found by inserting the canonical operators: \(\hat{O}=O(\hat{\vb{r}},\hat{\vb{p}})\).
+
+Composite systems are denoted either as a tensor product, say \(\ket{\psi}\otimes\ket{\phi}\) , or using some form of compact notation \(\ket{\psi,\phi}\), depending on the system in question. This report will favour a compact notation in cases where such notation is natural. Each component of a composite system is considered a degree of freedom, be it different spatial degrees of freedom of the same system or completely unrelated degrees of freedom (e.g. an electron's position and spin). The Hamiltonian of a composite system with \(N\) degrees of freedom is equal to the sum of the individual Hamiltonians for each component plus the interaction:
+\begin{equation}\label{eq:Composite_Hamiltonian}
+\hatHH_\text{composite}=\sum_{i=1}^N\hatHH_{i}+\hatHH_\text{interaction}
+\end{equation}
+where \(\hatHH_\text{interaction}\) encompases all interactions between the \(N\) degrees of freedom.
+
+For infinite-dimensional Hilbert spaces, the inner product between \(\ket{\psi}\) and \(\ket{\phi}\) is
+\begin{equation}
+\braket{\psi}{\phi}=\int\dd[3]{\vb{r}}\psi(\vb{r})^*\phi(\vb{r})
+\end{equation}
+Similarly, the expected value of some operator \(\hat{A}\) for a system in a state \(\ket{\psi}\) is
+\begin{equation}\label{eq:expected_value_of_operator}
+\bra{\psi}\hat{A}\ket{\psi}=\int\dd[3]{\vb{r}}\psi(\vb{r})^*\hat{A}\psi(\vb{r})
+\end{equation}
+In case \(\ket{\psi}\) is an eigenket of \(\hat{A}\) with corresponding eigenvalue \(a\), \eqref{eq:expected_value_of_operator} is simplified to
+\begin{equation}\label{eq:expected_value_of_operator_eigenstate}
+\bra{\psi}\hat{A}\ket{\psi}=\bra{\psi}a\ket{\psi}=a\braket{\psi}{\psi}=a
+\end{equation}
+assuming \(\ket{\psi}\) is normalised. Expanding the integral in \eqref{eq:expected_value_of_operator_eigenstate} one finds that the wave functions simplify to \(\abs{\psi(\vb{r})}^2\): the probability density of finding the system at \(\vb{r}\).
+\subsubsection{The variational principle \& method}
+The variational principle (not to be confused with the variational method, see below) is a simple statement that is true for all quantum systems. It states that the expected energy of a quantum system in a state \(\ket{\psi}\) is greater than or equal to the ground state energy:
+\begin{equation}\label{eq:variational_principle}
+E_g\leq\frac{\bra{\psi}\hatHH\ket{\psi}}{\braket{\psi}}
+\end{equation}
+Here \(\ket{\psi}\) is not necessarily normalized (which is way the expected energy is divided by the norm). The equation becomes an equality only when \(\ket{\psi}\) is the ground state. 
+
+The variational principle is the basis for the \emph{variational method}, which exploits the simplicity of the varitional principle in order to approximate the ground state energy. The primary problem is to study some Hamiltonian \(\hatHH\) whose energy eigenkets are unknown. The idea is to introduce a so-called \emph{trial state} \(\ket{\psi_T(\alpha)}\), which is dependent on some parameter \(\alpha\) (where \(\alpha\) is not necessarily scalar). If chosen correctly, the trial state may be able to reproduce the functional shape of the ground state, thus providing an approximate upper bound \(E_T\) of the ground state energy. The variational method is actually an umbrella term for several methods, however, their underlying idea is more or less the same. The process is most easily shown as an algorithm:
+\begin{algorithm}[H]
+\caption{The Varitational Method}\label{algo:varitational_method}
+\begin{algorithmic}[1]
+\State Suggest a trial state \(\ket{\psi_T(\alpha)}\).
+\State Compute the trial energy \(E_T\) as a function of \(\alpha\):
+\[E_T(\alpha)=\frac{\bra{\psi_T(\alpha)}\hatHH\ket{\psi_T(\alpha)}}{\braket{\psi_T(\alpha)}}\]
+\State Minimise \(E_T\) with respect to \(\alpha\).
+\State Choose the optimal \(\ket{\psi_T(\alpha)}\) based on the \(\alpha\) that minimises \(E_T\).
+
+\noindent The resulting optimal \(E_T\) is an upper bound on the ground state energy, while the corresponding trial state is the optimal approximation of the ground state.
+\end{algorithmic}
+\end{algorithm}
+Due to computational aspects, a common variant of the algorithm is to have the process of minimsation of \(E_T\) be integrated in a loop over different parameters \(\alpha\).
+\subsubsection{The Coulomb interaction}
+An interesting, although somewhat discouraging, reality is that one of the fundamental interactions of nature, the Coulomb interaction, is more or less analytically unsolvable for everything but the simplest of systems. The Hydrogen is one such system in which the interaction is perfectly solvable. On the other hand, the second simplest element, Helium, is not. The problem arises from the electron-electron interaction:
+\begin{equation}\label{eq:electron_electron_Coulomb_interaction}
+V_{e^-e^-}=\frac{e^2}{4\pi\varepsilon_0}\frac{1}{|\vb{r}_1-\vb{r}_2|}=\frac{k_ee^2}{|\vb{r}_1-\vb{r}_2|}
+\end{equation}
+where \(\varepsilon_0\) is the permittivity of free space, \(k_e=1/4\pi\varepsilon_0\) is Coulomb's constant, and \(\vb{r}_1\) and \(\vb{r}_2\) are the positions of electron 1 and 2. In general, given \(N\) particles of change \(q_i\), the total electric potential energy is
+\begin{equation}\label{eq:general_Coulomb_interaction}
+V_C=\frac{k_e}{2}\sum_{i=1}^N\sum_{{\tiny\mqty{j=1\\j\neq i}}}^N\frac{q_iq_j}{|\vb{r}_i-\vb{r}_j|}
+\end{equation}
+where the \(1/2\) factor ensures that the potential is equally shared between the symmetric \(q_i\)-\(q_j\) and \(q_j\)-\(q_i\) interactions. An equivalent and more computationally friendly way of expressing \eqref{eq:general_Coulomb_interaction} is
+\begin{equation}\label{eq:general_Coulomb_interaction_friendly_expression}
+V_C=k_e\sum_{j=2}^N\sum_{i=1}^{j-1}\frac{q_iq_j}{|\vb{r}_i-\vb{r}_j|}
+\end{equation}
+\subsection{Quantum Mechanics - The Harmonic Oscillator}
+The harmonic oscillator is one of the finest achivements of quantum mechanics with applications in many areas of physics and other sciences. The following section will present the algebraic solution to the harmonic oscillator Hamiltonian, and generalise the results to an \(N\)-dimensional system of oscillators.
+\subsubsection{The single harmonic oscillator}
+The potential energy of a single-degree classical harmonic oscillator with oscillation frequency \(\omega\) is \(V=\frac{1}{2}\omega^2x^2\), it follows that the Hamiltonian for a single-degree quantum harmonic oscillator with mass \(m\) is
+\begin{equation}\label{eq:Hamiltonian_harmonic_oscillator}
+\hatHH_\text{HO}=\frac{\hat{p}^2}{2m}+\frac{1}{2}\omega^2\hat{x}
+\end{equation}
+where \(\hat{p}=\hat{\vb{p}}\cdot\vb{e}_x\) is the system's momentum operator. The problem at hand is to find the energy eigenkets of the Hamiltonian. This will be done using the so-called \emph{ladder operators}:\footnote{These operators have several names, e.g. \emph{raising/lowering} operators, \emph{creation/annahilation} operators, etc.}
+\begin{subequations}\label{eq:harmonic_oscillator_ladder_operators}
+\begin{align}
+        \hat{a}&=\frac{1}{\sqrt{2\hbar m\omega}}\big(+i\hat{p}+m\omega\hat{x}\big)\\
+\hat{a}^\dagger&=\frac{1}{\sqrt{2\hbar m\omega}}\big(-i\hat{p}+m\omega\hat{x}\big)
+\end{align}
+\end{subequations}
+One can easily show that the ladder operators satisfy the commutation relation \([\hat{a},\hat{a}^\dagger]=1\). Rewriting \(\hat{x}\) and \(\hat{p}\) in terms of \(\hat{a}\) and \(\hat{a}^\dagger\), one finds that the Hamiltonian can be written as
+\begin{equation}
+\hatHH_\text{HO}=\hbar\omega\bigg(\hat{a}^\dagger\hat{a}+\frac{1}{2}\bigg)=\hbar\omega\bigg(\hat{a}\hat{a}^\dagger-\frac{1}{2}\bigg)
+\end{equation}
+It turns out that the energy eigenkets can be uniquely labelled using a single non-negative integer index \(n\): \(\ket{n}\). Furthermore, the action of ladder operators on the energy eigenkets raises or lowers \(n\) as follows:
+\begin{equation}\label{eq:ladder_operations}
+\hat{a}\ket{n}=\sqrt{n}\ket{n-1}\qand\hat{a}^\dagger\ket{n}=\sqrt{n+1}\ket{n+1}
+\end{equation}
+Note that \(n<0\) is avoided as \(\hat{a}\ket{0}=0\).\footnote{This is actually somewhat missleading, but it originates in the derivation of the harmonic oscillator energies. By requiring non-negative energies, one finds that the ``ladder of energy eigenkets'' must be truncated in order to avoid \(\braket{n}<0\). This truncation is also the origin of the index \(n\).} It follows that \(\hat{a}^\dagger\hat{a}\ket{n}=n\ket{n}\) such that
+\begin{equation}\label{eq:harmonic_oscillator_energies}
+\hatHH_\text{HO}\ket{n}=\hbar\omega\bigg(n+\frac{1}{2}\bigg)\ket{n}=E_n\ket{n}
+\end{equation}
+The energy eigenkets can be uniquely described in terms of \(\ket{0}\) and \(\hat{a}^\dagger\) via
+\begin{equation}\label{eq:harmonic_oscillator_eigenkets}
+\ket{n}=\frac{\big(\hat{a}^\dagger\big)^n}{\sqrt{n!}}\ket{0}
+\end{equation}
+where the factorial accounts for the \(\sqrt{n+1}\) scaling in \eqref{eq:ladder_operations}.
+
+\subsubsection{The virial theorem}
+The virial theorem is an important result in both classical and quantum mechanics, a simple version of the virial theorem states that the expected total kinetic energy \(\expval{K}\) is proportional to the expected potential energy \(\expval{V}\). Peculiar to the harmonic oscillator, provided an energy eigenstate, the expected total kinetic energy is actually equal to the expected potential energy.
+
+Suppose a quantum system subject to a harmonic potential is in the energy eigenket \(\ket{n}\). The expected kinetic and potential energies are thus
+\begin{subequations}
+\begin{align}
+\expval{K}_n&=\bra{n}\hat{K}\ket{n}=\bra{n}\frac{\hat{p}^2}{2m}\ket{n}\\
+\expval{V}_n&=\bra{n}\hat{V}\ket{n}=\bra{n}\frac{1}{2}m\omega^2\hat{x}^2\ket{n}
+\end{align}
+\end{subequations}
+Rewriting \(\hat{x}\) and \(\hat{p}\) in terms of \(\hat{a}\) and \(\hat{a}^\dagger\) results in:
+\[\hat{x}^2=\frac{\hbar}{2m\omega}\big(\hat{a}^\dagger+\hat{a}\big)^2\qand\hat{p}^2=-\frac{m\hbar\omega}{2}\big(\hat{a}^\dagger-\hat{a}\big)^2\]
+The ladder operator polynomials are:
+\begin{align*}
+\big(\hat{a}^\dagger+\hat{a}\big)^2&=\hat{a}^\dagger\hat{a}^\dagger+\hat{a}^\dagger\hat{a}+\hat{a}\hat{a}^\dagger+\hat{a}\hat{a}\\
+&=\hat{a}^\dagger\hat{a}^\dagger+\hat{a}\hat{a}+2\hat{a}^\dagger\hat{a}+1\\[0.25cm]
+\big(\hat{a}^\dagger-\hat{a}\big)^2&=\hat{a}^\dagger\hat{a}^\dagger-\hat{a}^\dagger\hat{a}-\hat{a}\hat{a}^\dagger+\hat{a}\hat{a}\\
+&=\hat{a}^\dagger\hat{a}^\dagger+\hat{a}\hat{a}-2\hat{a}^\dagger\hat{a}-1
+\end{align*}
+Hence,
+\begin{widetext}
+\begin{subequations}\label{eq:harmonic_oscillator_kinetic_and_potential_action}
+\begin{align}
+\hat{K}\ket{n}&=-\frac{\hbar\omega}{4}\bigg[\sqrt{(n+1)(n+2)}\ket{n+2}+\sqrt{n(n-1)}\ket{n-2}-2n\ket{n}-\ket{n}\bigg]\\
+\hat{V}\ket{n}&=+\frac{\hbar\omega}{4}\bigg[\sqrt{(n+1)(n+2)}\ket{n+2}+\sqrt{n(n-1)}\ket{n-2}+2n\ket{n}+\ket{n}\bigg]
+\end{align}
+\end{subequations}
+\end{widetext}
+It follows then that
+\begin{equation}
+\expval{K}_n=\expval{V}_n=\frac{E_n}{2}=\frac{\hbar\omega}{2}\bigg(n+\frac{1}{2}\bigg)
+\end{equation}
+That is, for a single harmonic oscillator with oscillation frequency \(\omega\) in an energy eigenstate, the expected kinetic and potential energy is the same.
+
+In case the harmonic oscillator is not in an energy eigenstate, but in some arbitrary state \(\ket{\psi}\), it is not necessarily the case that \(\expval{K}=\expval{V}\). Consider the fact that the energy eigenkets span the Hilbert space, thereby implying that
+\begin{equation}
+\ket{\psi}=\sum_n\alpha_n\ket{n}
+\end{equation}
+for an appropriate choice of \(\alpha_n\). Furthermore, the expected kinetic energy and potential energy is therefore
+\begin{subequations}\label{eq:harmonic_oscillator_expected_kinetic_and_potential_generalised}
+\begin{align}
+\bra{\psi}\hat{K}\ket{\psi}&=\sum_n\sum_m\alpha_n^*\alpha_m\bra{n}\hat{K}\ket{m}\\
+\bra{\psi}\hat{V}\ket{\psi}&=\sum_n\sum_m\alpha_n^*\alpha_m\bra{n}\hat{V}\ket{m}
+\end{align}
+\end{subequations}
+It is not immediately obvious from \eqref{eq:harmonic_oscillator_expected_kinetic_and_potential_generalised} whether \(\expval{K}\) is equal to \(\expval{V}\) or not. However if \(\expval{K}=\expval{V}\), then
+\begin{align*}
+\bra{\psi}\hat{K}\ket{\psi}-\bra{\psi}\hat{V}\ket{\psi}&=\bra{\psi}\big(\hat{K}-\hat{V}\big)\ket{\psi}\\
+&=\sum_n\sum_m\alpha_n^*\alpha_m\bra{n}\big(\hat{K}-\hat{V}\big)\ket{m}
+\end{align*}
+must be equal to zero. The braket can be simplified by inserting \eqref{eq:harmonic_oscillator_kinetic_and_potential_action}:
+\[-\frac{\hbar\omega}{2}\bigg[\sqrt{(m+1)(m+2)}\delta_{n,m+2}+\sqrt{m(m-1)}\delta_{n,m-2}\bigg]\]
+which in turn yields:
+\begin{align*}
+&\bra{\psi}\big(\hat{K}-\hat{V}\big)\ket{\psi}=\\
+&-\frac{\hbar\omega}{2}\sum_n\alpha_n^*\Big(\alpha_{n-2}\sqrt{(n-1)n}+\alpha_{n+2}\sqrt{(n+2)(n+1)}\Big)
+\end{align*}
+As this expression is not necessarily 0 for any state \(\ket{\psi}\), it is not necessarily true that \(\expval{K}\) is equal to \(\expval{V}\).
+
+\subsubsection{The harmonic oscillator eigenfunctions}
+Having found the algebraic solution to the harmonic oscillator problem, the next step is to express the eigenkets in the position basis. The simplest eigenstate is the ground state, for which \(E_0=\hbar\omega/2\). Inserting \(\hat{x}=x\) and \(\hat{p}=-i\hbar\partial_x\) into \eqref{eq:Hamiltonian_harmonic_oscillator} yields:
+\[\HH_\text{HO}=\frac{-\hbar^2}{2m}{\partial_x}^2+\frac{1}{2}\omega^2x^2\]
+It is difficult to work with a plethora of constants and variables, thus consider the dimensionless variable \(\xi=\sqrt{m\omega/\hbar}x\) with correpsonding derivative \(\partial_\xi=\sqrt{m\omega/\hbar}\partial_x\). Written in terms of \(\xi\), the equation \(\hatHH\ket{0}=\frac{1}{2}\hbar\omega\ket{0}\) may be written as
+\[\frac{-\hbar\omega}{2}{\partial_\xi}^2\psi_0(\xi)+\frac{\hbar\omega}{2}\xi^2\psi_0(\xi)=\frac{\hbar\omega}{2}\psi_0(\xi)\]
+where \(\psi_0(\xi)=\braket{\xi}{0}\) is the ground state wave function. The solution is
+\begin{equation}\label{eq:harmonic_oscillator_ground_state_position_basis}
+\psi_0(\xi)=\bigg(\frac{m\omega}{\pi\hbar}\bigg)^{1/4}e^{-\xi^2/2}=Ce^{-\xi^2/2}
+\end{equation}
+Because the ground state is known, equation \eqref{eq:harmonic_oscillator_eigenkets} implies that the excited states may be found by successive application of \(\hat{a}^\dagger\). In terms of \(\xi\) and \(\partial_\xi\), \(\hat{a}^\dagger\) is:
+\[a^\dagger=\frac{1}{\sqrt{2m\hbar\omega}}\big(-\hbar\partial_x+m\omega x\big)=\frac{1}{\sqrt{2}}\big(\xi-\partial_\xi\big)\]
+Computing \((a^\dagger)^n\psi_0/\sqrt{n!}\) becomes incredibly inefficient for large \(n\). However, it is actually unecessary because there exists exact solutions in terms of the so-called \emph{Hermite polynomials}. These polynomials, commonly denoted by \(H\), are solutions to the differential equation:
+\begin{equation}\label{eq:Hermite_differential_equation}
+\bigg[{\partial_\xi}^2-2\xi\partial_\xi+\big(\lambda-1\big)\bigg]H(\xi)=0
+\end{equation}
+The differential equation has been generalised for any complex \(\lambda\), but the solutions interesting to the harmonic oscillator have \(\lambda=2n+1\), where \(n=0,1,\ldots\) is the same index as used by the energy eigenkets. The Hermite polynomials can be explicitly expressed by Rodrigues' formula:
+\begin{equation}\label{eq:Hermite_polynomials_Rodrigues_Formula}
+H_n(\xi)=(-1)^ne^{\xi^2}\big(\partial_\xi\big)^ne^{-\xi^2}
+\end{equation}
+from which one can show that the Hermite polynomials satisfy the following recurrence relations:
+\begin{subequations}\label{eq:Hermite_polynomials_recurrence_relations}
+\begin{align}
+H_{n+1}(\xi)&=2\xi H_n(\xi)-\partial_\xi H_n\\
+\partial_\xi H_n&=2nH_{n-1}(\xi)
+\end{align}
+\end{subequations}
+Moreover, the Hermite polynomials satisfy the orthogonality condition:
+\begin{equation}\label{eq:Hermite_polynomials_orthogonality}
+\int_{-\infty}^{\infty}\dd{\xi}e^{-\xi^2}H_n(\xi)H_m(\xi)=\delta_{nm}2^nn!\sqrt{\pi}
+\end{equation}
+
+The harmonic oscillator energy eigenfunctions are expressed in terms of the Hermite polynomails as:
+\begin{equation}\label{eq:harmonic_oscillator_energy_eigenfunctions}
+\psi_n(x)=\frac{C}{\sqrt{2^nn!}}H_n(\xi)e^{-\xi^2/2}\qcomma\xi=\sqrt{\frac{m\omega}{\hbar}}x
+\end{equation}
+(where \(C\) is the same as before.) While this equation may seem completely unmotivated, it can easily be shown from an argument of induction. The \(n=0\) case is easy:
+\[\braket{\xi}{0}=\frac{C}{\sqrt{2^00!}}H_0(\xi)e^{-\xi^2/2}=Ce^{-\xi^2/2}=\psi_0(\xi)\]
+Now let \(n=k\) and consider \(\braket{\xi}{k+1}\):
+\begin{align*}
+\bra{\xi}\frac{\hat{a}^\dagger}{\sqrt{k+1}}\ket{k}&=C\frac{\xi-\partial_\xi}{\sqrt{2(k+1)}}\frac{1}{\sqrt{2^kk!}}H_k(\xi)e^{-\xi^2/2}
+\end{align*}
+It follows from \eqref{eq:Hermite_polynomials_recurrence_relations} that \(\big(\xi-\partial_\xi\big)H_k(\xi)e^{-\xi^2/2}\) is equal to \(H_{k+1}(\xi)e^{-\xi^2/2}\), which completes the induction proof:
+\[\braket{\xi}{k+1}=C\frac{1}{\sqrt{2^{k+1}(k+1)!}}H_{k+1}(\xi)e^{-\xi^2/2}=\psi_{k+1}(\xi)\]
+Note that the question of orthonormality is ensured by the orthonormality of the Hermite polynomials.
+\subsubsection{Composite systems of harmonic oscillators}
+Having studied the single harmonic oscillator, the final piece of the puzzle is to address a system of harmonic oscillators. Such a composite system could consist of different spatial degrees of freedom of the same particle, different particles or a mixture. Each individual harmonic oscillator behaves according to their Hamiltonian \(\hatHH_\text{HO}\), and the system as a whole obeys equation \eqref{eq:Composite_Hamiltonian}.
+
+Mathematically speaking, the Hamiltonian of a composite system with \(N\) harmonic oscillators is
+\begin{equation}
+\hatHH^\text{sys}=\hatHH_\text{HO}\otimes\cdots\otimes\hat{I}+\cdots+\hat{I}\otimes\cdots\otimes\hatHH_\text{HO}
+\end{equation}
+But this is tedius to write, thus let the \(i^\text{th}\) term (i.e., the term where the \(i^\text{th}\) component of the tensor product is \(\hatHH_{HO}\)) be denoted by \(\hatHH_\text{HO}^i\) such that the above expression simplifies to equation \eqref{eq:Composite_Hamiltonian}. The system's energy eigenkets are
+\begin{equation}
+\ket{\psi}=\ket{n_1,\ldots,n_N}=\ket{n_1}\otimes\cdots\otimes\ket{n_N}
+\end{equation}
+where each \(\ket{n}\) is the regular harmonic oscillator energy eigenkets. Because \(\hatHH_\text{HO}^i\) only acts on the \(i^\text{th}\) component of the tensor product, only the energy index \(n_i\) is affected:
+\begin{equation}
+\hatHH_\text{HO}^i\ket{\psi}=\hbar\omega_i\bigg(n_i+\frac{1}{2}\bigg)\ket{\psi}
+\end{equation}
+where \(\omega_i\) is the oscillation frequency of the \(i^\text{th}\) harmonic oscillator. It follows that the composite system's energy eigenvalues are
+\begin{equation}\label{eq:composite_harmonic_oscillator_energy}
+\hatHH^\text{sys}\ket{\psi}=\hbar\Bigg[\omega_1\bigg(n_1+\frac{1}{2}\bigg)+\cdots+\omega_N\bigg(n_N+\frac{1}{2}\bigg)\Bigg]\ket{\psi}
+\end{equation}
+This expression greatly simplifies when the oscillation frequency is uniform (i.e. \(\omega_i=\omega\)):
+\begin{equation}\label{eq:composite_harmonic_oscillator_energy_unifreq}
+\hatHH^\text{sys}\ket{\psi}=\hbar\omega\bigg(n_1+\cdots+n_N+\frac{N}{2}\bigg)\ket{\psi}
+\end{equation}
+The ground state (\(n_i=0\)) energy of the composite harmonic oscillator with uniform frequency is therefore
+\begin{equation}\label{eq:composite_harmonic_oscillator_ground_energy}
+E_g=\hbar\omega\frac{N}{2}
+\end{equation}
+
+If all oscillators are in an energy eigenstate, then \(\expval{K}_n=\expval{V}_n\) implies that the total expected kinetic energy is equal to the total expected potential energy.
+\subsection{Markov Chain Monte Carlo Methods}
+\subsubsection{Monte Carlo integration}
+One of the most versatile approaches to numerical integration is Monte Carlo integration. Its clever exploit of stochastic variables allows it to tackle high-dimensional integrals with little extra effort.
+
+The goal of Monte Carlo integration is to evaluate integrals on the form:
+\begin{equation}\label{eq:general_integral}
+I=\int_D\dd{x}f(x)\qc x\in D
+\end{equation}
+where \(x\) is not necessarily one-dimensional. Let \(p(x)\) denote a known distribution and consider the change of variables from \(x\) to \(p(x)\):
+\begin{equation}\label{eq:integral_to_expected_value}
+\int_D\dd{x}f(x)=\int_{x\in D}\dd{p(x)}\,\frac{f(x)}{p(x)}=\expval{\frac{f(x)}{p(x)}}_{p(x)}
+\end{equation}
+That is, the integral \(I\) is equal to the expected value of \(f(x)/p(x)\) with respect to the probability distribution \(p(x)\). The idea is to draw \(N_\text{MC}\) random numbers \(X\sim p(x)\) and estimate the expected value with the sample expected value:
+\begin{equation}\label{eq:approximated_expected_value}
+\expval{\frac{f(x)}{p(x)}}_X\approx\sum_{i=1}^{N_\text{MC}}\frac{f(x_i)}{p(x_i)}p(x_i)=\sum_{i=1}^{N_\text{MC}}f(x_i)
+\end{equation}
+The basic Monte Carlo integration algorithm is summarised below:
+\begin{algorithm}[H]
+\caption{Standard Monte Carlo Integration}\label{algo:standard_Monte_Carlo}
+\begin{algorithmic}[1]
+\State Define \(N_\text{MC}\).
+\State Initialise \(\text{SUM}=0\).
+\NoDoFor {\(i=1,\ldots,N_\text{MC}\):}
+	\State Draw \(x_i\) at random according to \(p(x)\).
+	\State Evaluate \(f(x_i)\).
+	\State Add \(f(x_i)\) to SUM.
+\EndFor
+\State Normalise final value: \(I=\text{SUM}/N_\text{MC}\).
+\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Markov chains}
+A Markov chain is a stochastic model for the discrete evolution of a so-called "memoryless system",\footnote{A Markov chain may be generalised to continuous evolution, but this will not be used in this project.} i.e. a system whose current state only depends on the previous state of the system. Formally, such a memoryless system satisfies the \emph{Markov property}, which requires that the probability of moving from a state \(X_n\) to state \(X_{n+1}\) is only dependent on \(X_n\). The state space may either be continuous or discrete, each of which introduce a similar albeit distinct formalism. This project will only use a continuous state space, thus the discrete formalism will be ignored here.
+
+Say the state space for a particular Markov chain is \(\mathcal{S}\), then a \emph{stochastic kernel} on \(\Sspace\) is a function \(p:\Sspace\times\Sspace\to\mathbb{R}\) that satisfies
+\[p(x,y)\leq0,\,\forall x,y\in\Sspace\qand\int_\Sspace\dd{y}p(x,y)=1,\,\forall x\in\Sspace\]
+Each Markov chain is parametrised by its corresponding stochastic kernel, which in this sense is usually referred to as the transition probability density. Now for every \(p(x,y)\) there exists a so-called \emph{Markov operator} \(P\) that is such that
+\[\big[(\cdot)P\big](y)=\int_\Sspace\dd{x}p(x,y)(\cdot)\]
+Note in particular that \(P\) is a left-acting operator, as per usual in the literature.
+
+Furthermore, say the Markov chain has continued for \(n\) steps with previous measurements \(X_1=x_1,X_2=x_2,\ldots,X_n=x_n\), then the next measurement \(X_{n+1}=y\) is drawn according to the distribution \(p^{(n+1)}(y)\) whose evolution from the current distribution \(p^{(n)}(x)\) is given by the Markov operator of the Markov chain:
+\begin{equation}\label{eq:Markov_Chain_next_distribution}
+p^{(n+1)}(y)=\big[p^{(n)}(x)P\big](y)=\int_\Sspace\dd{x}p(x,y)p^{(n)}(x)
+\end{equation}
+
+A special case of \eqref{eq:Markov_Chain_next_distribution} is when the distribution is invariant of \(P\), that is, when \(p^{(n+1)}=p^{(n)}\). This behaviour is called a stationary distribution and is usually denoted by \(\pi(x)\):\footnote{Becuase choosing \(\pi\) to represent something else other than \(\pi\) seemed like a great idea, obviously.}
+\begin{equation}
+\pi(y)=\int_\Sspace\dd{x}p(x,y)\pi(x)
+\end{equation}
+Such a state is guaranteed if the Markov chain obeys the so-called \emph{detailed balance} condition. Provided a transition probability density \(p(x,y)\) and a particular distribution \(\pi(x)\), then the detailed balance condition states that the Markov chain corresponding to \(p(x,y)\) is \emph{reversible} with respect to \(\pi(x)\) if
+\begin{equation}\label{eq:Markov_Chain_detailed_balance}
+\pi(x)p(x,y)=\pi(y)p(y,x),\ \forall x,y\in\Sspace
+\end{equation}
+It follows that
+\[\int_\Sspace\dd{x}p(x,y)\pi(x)=\pi(y)\int\dd{x}p(y,x)=\pi(y)\]
+because \(p(x,y)\) is normalised for all \(x,y\in\Sspace\). In conclusion, in case a Markov chain is "well-behaved", meaning it satisfies detailed balance, then the so-called \emph{limiting distribution} of the Markov chain approaches \(\pi\) as \(n\to\infty\):
+\begin{equation}
+\lim_{n\to\infty}\big[p^{(0)}(x)P^n\big](y)=\pi(y)
+\end{equation}
+where \(P^n\) implies repeated operations on \(p^{(0)}\), \(p^{(1)}\), etc.
+\subsubsection{Markov Chain Monte Carlo: The Metropolis algorithm}
+As the name implies, Markov Chain Monte Carlo (MCMC) methods combine the concept of a Markov chain with Monte Carlo methods. There exists several MCMC methods, each with unique properties that may or may not be benefitial. This project will focus on the so-called \emph{Metropolis} algorithm, which is a special case of the \emph{Metropolis-Hastings} algorithm.
+
+The basic idea behind the MCMC methods stems from equation \eqref{eq:approximated_expected_value}. Ideally one would be able to draw a sufficiently large number of states \(x\) from \(p(x)\) and follow algorithm \ref{algo:standard_Monte_Carlo} religiously. However, this is incredibly computation-ineffective and essentially infeasible for a standard computer. Enter Markov chains: A Markov chain with limiting distribution \(\pi(x)=p(x)\) would necessarily generate states that are approximately distributed according to \(p(x)\). It turns out that this may be exploited in order to avoid large computations.
+
+The mathematics of MCMC methods are based on the detailed balance principle, consider the following rearranging of equation \eqref{eq:Markov_Chain_detailed_balance}:
+\[\frac{p(x,y)}{p(y,x)}=\frac{\pi(y)}{\pi(x)}\]
+Now, suppose the current state of the Markov chain governed by \(p(x,y)\) is \(X_n\), i.e., the \(n^\text{th}\) state in the chain. The idea is to separate the transition process into two steps: an initial \emph{proposal}, and an \emph{acceptance/rejection} step. These steps should be independent so that probability is independent, meaning the probability density of proposing a state \(y\), \(g(y|x)\), is independent of the probability of accepting the proposal, \(\alpha(x,y)\). Because they are independent, it follows that
+\begin{equation}
+p(x,y)=g(y|x)\alpha(x,y)
+\end{equation}
+meaning the above criteria may be rewritten as
+\begin{equation}\label{eq:MCMC_detailed_balance_with_TandA}
+\frac{\alpha(y,x)}{\alpha(x,y)}=\frac{p(y)}{p(x)}\frac{g(x|y)}{g(y|x)}
+\end{equation}
+where \(p(x)=\pi(x)\) is the assertion of MCMC methods that the limiting distribution of the Markov chain governed by \(p(x,y)\) is the integrand of equation \eqref{eq:general_integral}. This expression is particularly easy to implement in case the normalisation of \(p\) and \(g\) are independent on \(x\) and \(y\), or if they happen to cancel each other (although this is very unlikely).
+
+The last step it to choose an acceptance probability \(\alpha(y,x)\) that satisfies \ref{eq:MCMC_detailed_balance_with_TandA}, the \emph{Metropolis choice} is
+\begin{equation}\label{eq:Metropolis_Hastings_acceptance_probability}
+\alpha(y,x)=\min\left\lbrace 1,\frac{p(y)}{p(x)}\frac{g(x|y)}{g(y|x)}\right\rbrace
+\end{equation}
+The Metropolis-Hastings algorithm may now be stated:
+\begin{algorithm}[H]
+\caption{The Metropolis-Hastings Algorithm}\label{algo:Metropolis_Hastings}
+\begin{algorithmic}[1]
+\State Initialise the first state \(X_0\).
+\NoDoFor {\(n=1,\ldots,N_\text{MH}\):}
+	\State Generate a proposal \(y\) according to \(g(y|x)\).
+	\State Evaluate acceptance probability \(\alpha(y,x)\).
+	\NoThenIf {\(\alpha(y,x)=1\):}
+		\State Accept \(y\).
+	\Else
+		\State Draw a uniformly distributed number \(a\in[0,1]\).
+		\NoThenIf {\(a\leq\alpha(y,x)\):}
+			\State Accept \(y\).
+		\Else
+			\State Reject \(y\) and set \(X_{n+1}=X_n\).
+		\EndIf
+	\EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+where \(N_\text{MH}\) is the number of steps in the Markov chain. Note that the algorithm above does not factor in the Monte Carlo update, this is because the central purpose of the Metropolis-Hastings algorithm is namely just to sample \(x\) values according to \(p(x)\). Nonethelesss, implementations of the algorithm usually include an intermediate step inside this loop in order to avoid multiple loops.
+
+Furthermore, although the distribution is guaranteed to converge, it does not necessarily converge within the first few steps. Accordingly, a common practice is to perform \(N_\text{prep}\) preparation updates to \(X_0\) in a process known as "burn-in", before invoking the Monte Carlo steps. When a step in the Markov chain represents a forward step in time, the amount of necessary burn-in is commonly referred to as the equilibration time of the system.
+
+As previously mentioned, this project will implement the Metropolis algorithm, which is a special case of the Metropolis-Hastings algorithm. The Metropolis assumes that \(g\) is symmetric in \(x\) and \(y\), meaning \(g(x|y)=g(y|x)\). This implies that the acceptance probability may be simplified to
+\begin{equation}\label{eq:Metropolis_acceptance_probability}
+\alpha_\text{M}(y,x)=\min\left\lbrace1,\frac{p(y)}{p(x)}\right\rbrace
+\end{equation}
+
+
+
+
+
+
+
+
+
+
+
+\section{Method}
+
+\section{Results}
+
+
+\section{Discussion}
+
+\section{Conclusion}
+
+%\bibliographystyle{plain}
+%\bibliography{references.bib}
+
+
+~
+\clearpage
+\appendix
+
+\onecolumngrid
+\section{Miscellaneous Material}\label{app:misc_material}
+
+\end{document}
