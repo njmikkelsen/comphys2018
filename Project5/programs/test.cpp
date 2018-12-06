@@ -3,13 +3,10 @@
 #include <fstream>
 #include <string>
 #include <iomanip>
-#include <cmath>
-#include <random>
-#include "time.h"
+#include "vectorlib.h"
+#include "vmc.h"
 
 using namespace std;
-
-double Wave_Norm_Ratio(double * R);
 
 int main () {
 
@@ -48,22 +45,15 @@ int main () {
   double E  = 0;
   double E2 = 0;
   
-  // setup uniform distributions
-  random_device rd1;
-  random_device rd2;
-  
-  ranlux48 gen1(rd1());
-  ranlux48 gen2(rd2());
-  
-  uniform_real_distribution<double> uniform1(-1.0,1.0);
-  uniform_real_distribution<double> uniform2(+0.0,1.0);
+  Uniform uniform1(-1.0,1.0);
+  Uniform uniform2(+0.0,1.0);
   
   // Monte Carlo loop
   for (int n=0; n<N_MC; n++) {
     
     // propose new state
     for (int i=0; i<6; i++) {
-      double a = uniform1(gen1);
+      double a = uniform1();
       R1[i] = R0[i] + delta*a;;
     };
     
@@ -80,7 +70,7 @@ int main () {
     double alpha_M = exp(-constant1*((r1_new-r1_old) + (r2_new-r2_old)));
     
     // test proposal - update state if accepted
-    double b = uniform2(gen2);
+    double b = uniform2();
     if (b <= alpha_M) {
       accepted++;
       for (int i=0; i<6; i++) {R0[i] = R1[i];};
@@ -114,9 +104,6 @@ int main () {
   // delete arrays
   delete[] R0,R1;
   
-  
   return 0;
 };
-
-
 

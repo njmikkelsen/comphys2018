@@ -503,15 +503,15 @@ The symmetric Metropolis algorithm requires that \(p_{\alpha,\beta}^i(\vb{R}|\vb
 \begin{equation}
 \vb{R}'=\vb{R}+\hat{\delta}
 \end{equation}
-where \(\hat{\delta}\sim\mathcal{U}_6(-\delta,\delta)\) is a vector of random numbers. Now, the idea is to control the average Metropolis sampling acceptance ratio using \(\delta\). Ideally the acceptance ratio should be \(\approx50\)\%. To do this, consider the exponent of \(A_1\) using the triangle inequality:
-\[||\vb{R}_{n+1}||^2-||\vb{R}_n||^2=||\vb{R}_n+\hat{\delta}||^2-||\vb{R}_n||^2\leq||\hat{\delta}||^2\]
-To achieve an acceptance ratio of about 50\%, one would need \(A_i\approx1/2\). Using the approximation above:
-\[\frac{1}{2}\approx e^{-\alpha\omega||\hat{\delta}||^2}\implies||\hat{\delta}||^2\approx\frac{\ln(2)}{\alpha\omega}\]
-Now, instead of trying to approximate \(\delta\) from \(||\hat{\delta}||^2\) (which would be the reasonable approach), trial and error showed that simply defining
+where \(\hat{\delta}\sim\mathcal{U}_6(-\delta,\delta)\) is a vector of random numbers. Now, the idea is to control the average Metropolis sampling acceptance ratio using \(\delta\). Ideally the acceptance ratio should be \(\approx50\)\%, meaning \(A\approx1/2\). Furthermore, note that \eqref{eq:VMC_probability_ratios} treats \(\alpha\omega\) as a single variable, hence, so should the choice of \(\delta\). Furthermore, the triangle inequality implies that:
+\[\frac{1}{2}=e^{-\alpha\omega\big(||\vb{R}_{n+1}||^2-||\vb{R}_n||^2\big)}\leq e^{-\alpha\omega||\hat{\delta}^2||^2}\]
+meaning \(\ln(2)\geq\alpha\omega||\hat{\delta}||^2\). So far it is unclear how \(\delta\) is related to \(||\hat{\delta}||^2\), however, trial and error have shown that \(\delta=\ln(2)\) yields an acceptance rate of about 52\% when \(\alpha\omega=1\). For \(\alpha\omega\) values below 1, \(\ln(2)\) becomes a little to small as acceptance quickly soars above 80\%. Knowing that \eqref{eq:VMC_probability_ratios} is exponential, it is likely that \(A\) is logarithmic in \(\alpha\omega\). Hence, propose the relationship \(\delta=\ln(\alpha\omega+1)\), which becomes \(\ln(2)\) when \(\alpha\omega=1\). It turns out that this is not enough for small \(\alpha\omega\) values. What is needed is some functional that is zero for \(\alpha\omega\) values close to 1, but peaks for small values, the easiest example of such a relationship is something like:
+\[\frac{1}{x+a}-\frac{1}{1+a}\]
+where \(a\) is parameter. After some trial and error, the following \(\delta(\alpha\omega)\) function was found to work very well for most \(\alpha\omega\) values:
 \begin{equation}
-\delta=\frac{\ln(2)}{\alpha\omega}
+\delta(\alpha\omega)=\ln(\alpha\omega+1)+\frac{1}{\alpha\omega+\frac{1}{4}}-\frac{1}{1+\frac{1}{4}}
 \end{equation}
-produces excellent acceptance ratios when \(i=1\) and \(\alpha=\omega=1\). Seeing that \(\delta\) really is a parameter regardless, no further treatment will be made.
+In fact, the formula can be comfortably used for both \(A_1\) and \(A_2\) with \(\alpha\omega\) values greater than 0.02, yielding an acceptance ratio of approximately \(50\pm4\)\%. For \(\alpha\omega\) vaues below 0.02 the acceptance ratio increases rapidly, reaching somewhere between 70\% and 80\%  already by \(\alpha\omega=0.01\).
 
 The final Variational Monte Carlo Algorithm is listed below, note that it does not loop over \(\alpha\) and \(\beta\). This is intential (different experiments loop over different parameters). It is essentially a mixture of Algorithms \ref{algo:Metropolis_Hastings} and \ref{algo:standard_Monte_Carlo}, however with a clever manipulation of the double \texttt{if}-test inside the Metropolis loop. The initial \texttt{if}-test is actually uneccesary if \(\alpha_M\) is directly defined as \(p_{\alpha,\beta}^i(\vb{R}')/p_{\alpha,\beta}^i(\vb{R})\). This follows because of the fact that \(b\leq1\) (see algorithm). Consider the following: If \(A_i\) is greater than 1, then it is necessarily greater than b. Hence, defining \(\alpha_M\) as the ratio of the probabilities and ignoring the first \texttt{if}-test produces the same result as what is described in Algorithm \ref{algo:Metropolis_Hastings}.
 
@@ -520,11 +520,10 @@ The final Variational Monte Carlo Algorithm is listed below, note that it does n
 \begin{algorithmic}[1]
 \State Initialize \(\alpha\), \(\beta\) and \(i\).
 \State Initialize \(N_\text{MC}\), \(\delta\) and \(\vb{R}\).
-\State Compute \(|\psi_T i(\vb{R})|^2\).
 \State Initialize \(E=0\) and \((E^2)=0\).
 \NoDoFor {\(n=1,\ldots,N_\text{MC}\)}
-	\State Draw \(a\) according to \(\mathcal{U}(0,1)\).
-	\State Propose \(\vb{R}'=\vb{R}+\vb{1}\delta a\).
+	\State Draw \(\hat{\delta}\) according to \(\mathcal{U}_6(-1,1)\).
+	\State Propose \(\vb{R}'=\vb{R}+\hat{\delta}\).
 	\State Compute: \(\alpha_M=A_i\)
 	\State Draw \(b\) according to \(\mathcal{U}(0,1)\).
 	\NoThenIf {\(b\leq\alpha_M\):}
