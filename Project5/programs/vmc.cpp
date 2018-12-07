@@ -10,9 +10,9 @@
 
 double VMC::draw_prob () {return RandProb(RNG);};
 
-// run Monte Carlo simulation
+// Monte Carlo simulations
 
-void VMC::run_MonteCarlo (TrialWave psi, int N_MC, int N_burn, double& E_T, double& varE_T, double& acceptance)
+void VMC::run_MonteCarlo_energy (TrialWave psi, int N_MC, int N_burn, double& E_T, double& varE_T, double& acceptance)
 {
   // misc declerations
   double A;                           // Metropolis choice
@@ -53,6 +53,50 @@ void VMC::run_MonteCarlo (TrialWave psi, int N_MC, int N_burn, double& E_T, doub
   // normalize Monte Carlo integrals & compute acceptance
   E_T        = E*scale;
   varE_T     = E2*scale - E_T*E_T;
+  acceptance = (double)a*scale;
+};
+
+void VMC::run_MonteCarlo_separation (TrialWave psi, int N_MC, int N_burn, double& Dist, double& varDist, double& acceptance)
+{
+  // misc declerations
+  double A;                           // Metropolis choice
+  double b;                           // probability of acceptance
+  double d;                           // Monte Carlo local separation
+  int    a     = 0;                   // number of accepted proposals in Monte Carlo integration
+  double D     = 0;                   // Monte Carlo sum: distance between particles
+  double D2    = 0;                   // Monte Carlo sum: (distance between particles)^2
+  double scale = 1/((double)N_MC);    // Monte Carlo normalization scale
+  
+  // Metropolis burn in
+  for (int n=0; n<N_burn; n++) {
+    // propose state and compute Metropolis choice
+    psi.propose_state();
+    A = psi.alphaM();
+    b = draw_prob();
+    // update state if proposal is accepted
+    if (b <= A) {psi.update_state();};
+  };
+  
+  // re-seed Random Number Generator (avoid running out of random numbers)
+  RNG.seed((random_device())());
+   
+  // Monte Carlo integration
+  for (int n=0; n<N_MC; n++) {
+    // propose state and compute Metropolis choice
+    psi.propose_state();
+    A = psi.alphaM();
+    b = draw_prob();
+    // update state if proposal is accepted
+    if (b <= A) {a++; psi.update_state();};
+    // update Monte Carlo integral
+    d   = psi.separation();
+    D  += d;
+    D2 += d*d;
+  };
+  
+  // normalize Monte Carlo integrals & compute acceptance
+  Dist       = D*scale;
+  varDist    = D2*scale - Dist*Dist;
   acceptance = (double)a*scale;
 };
 
@@ -106,6 +150,7 @@ void TrialWave::setVarParams (double alpha_, double beta_) {
   beta      = beta_;
   constant1 = alpha*omega;
   constant2 = 0.5*omega*omega*(1-alpha*alpha);
+  
   // adjust random state generator
   delta = log(constant1 + 1) + 1./(constant1+0.25) - 1./1.25;
   Delta = uniform_real_distribution<double>(-delta,delta);
@@ -148,6 +193,7 @@ void TrialWave::update_state () {
 
 double TrialWave::alphaM      () {return (this->*alphaM_)     ();};
 double TrialWave::LocalEnergy () {return (this->*LocalEnergy_)();};
+double TrialWave::separation  () {return r12_prev;};
 
 // wave 1 
 

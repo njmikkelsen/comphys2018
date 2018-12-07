@@ -12,16 +12,19 @@ class TrialWave;
 
 class VMC {
   private:
-    // random probability generator
+    // probability generator
     ranlux48 RNG;
     double   draw_prob ();
     uniform_real_distribution<double> RandProb;
+    
   public:
     // constructor & destructor
     VMC  () : RNG((random_device())()), RandProb(0,1) {};
     ~VMC () {};
-    // Monte Carlo simulation
-    void run_MonteCarlo (TrialWave,int,int,double&,double&,double&);
+    
+    // Monte Carlo simulations
+    void run_MonteCarlo_energy     (TrialWave,int,int,double&,double&,double&);  // compute energy integrals
+    void run_MonteCarlo_separation (TrialWave,int,int,double&,double&,double&);  // compute expected particle separation
 };
 
 class TrialWave {
@@ -54,12 +57,12 @@ class TrialWave {
     double denom_next;  // 1 + beta*r12_next
     
     // random trial wave state generation
-    ranlux48 RNG;     // Random Number Generator
-    double   delta;   // max/min bounds of uniform distribution
-    uniform_real_distribution<double> Delta;
-    double draw_scalar ();
-    Vector draw_vector ();
-
+    ranlux48 RNG;                             // Random Number Generator
+    uniform_real_distribution<double> Delta;  // distribution
+    double delta;                             // max/min bounds of uniform distribution
+    double draw_scalar ();                    // draw random number
+    Vector draw_vector ();                    // draw random vector
+    
     // wave-specific functions
     double Wave1_alphaM      ();  // wave 1, Metropolis choice
     double Wave2_alphaM      ();  // wave 2, Metropolis choice
@@ -80,11 +83,11 @@ class TrialWave {
     void setVarParams (double);           // set alpha
     
     // functions accessed by VMC class
-    void propose_state ();
-    void update_state  ();
-    
-    double alphaM      ();
-    double LocalEnergy ();
+    void   propose_state ();
+    void   update_state  ();
+    double alphaM        ();
+    double LocalEnergy   ();
+    double separation    ();
 };
 
 #endif
