@@ -4,12 +4,15 @@ class progress_bar(object):
   """
   A command-line progress bar for use in large loops (as a sanity check).
   -----------------------------------------------------------------------
-  Argument N = number of loop iterations. Usage:
-
-  BAR = misclib.progress_bar(N)
+  N = number of loop iterations.
+  
+  Usage:
+  ---------------------------
+  sanity = progress_bar(N)
   for i in range(N):
     # do something
-    BAR.update()
+    sanity.update()
+  ---------------------------
   """
   def __init__(self,N,add_space=False):
     self.n = 0

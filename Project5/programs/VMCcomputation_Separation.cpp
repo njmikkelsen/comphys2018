@@ -30,7 +30,7 @@ int main (int argc, char* argv[])
   double    Var_separation;
   double    acceptance;
   VMC       vmc;
-  TrialWave psi(TYPE,omega);
+  TrialWave psi(TYPE,omega,true);
   psi.setVarParams(alpha,beta);
   
   // run Monte Carlo simulation

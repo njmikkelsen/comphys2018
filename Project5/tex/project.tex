@@ -414,7 +414,7 @@ The Metropolis-Hastings algorithm may now be stated:
 \end{algorithm}
 where \(N_\text{MH}\) is the number of steps in the Markov chain. Note that the algorithm above does not factor in the Monte Carlo update, this is because the central purpose of the Metropolis-Hastings algorithm is namely just to sample \(x\) values according to \(p(x)\). Nonethelesss, implementations of the algorithm usually include an intermediate step inside this loop in order to avoid multiple loops.
 
-Furthermore, although the distribution is guaranteed to converge, it does not necessarily converge within the first few steps. Accordingly, a common practice is to perform \(N_\text{prep}\) preparation updates to \(X_0\) in a process known as "burn-in", before invoking the Monte Carlo steps. When a step in the Markov chain represents a forward step in time, the amount of necessary burn-in is commonly referred to as the equilibration time of the system.
+Furthermore, although the distribution is guaranteed to converge, it does not necessarily converge within the first few steps. Accordingly, common practice is to perform \(N_\text{burn}\) preparation cycles (before beginning the Monte Carlo integration) known as a "Metropolis burn-in". When a step in the Markov chain represents a forward step in time, the amount of necessary burn-in is commonly referred to as the equilibration time of the system.
 
 As previously mentioned, this project will implement the Metropolis algorithm, which is a special case of the Metropolis-Hastings algorithm. The Metropolis assumes that \(g\) is symmetric in \(x\) and \(y\), meaning \(g(x|y)=g(y|x)\). This implies that the acceptance probability may be simplified to
 \begin{equation}\label{eq:Metropolis_acceptance_probability}
@@ -451,18 +451,18 @@ where \(\hatHH_\text{HO}^i\) denotes the three-dimensional harmonic oscillator H
 The project will use the following two trial wave functions:
 \begin{subequations}\label{eq:trial_wavefunctions}
 \begin{align}
-\psi_T^1(\vb{r}_1,\vb{r}_2)&=e^{-\alpha\frac{\omega}{2}(r_1^2+r_2^2)}\\
-\psi_T^2(\vb{r}_1,\vb{r}_2)&=e^{-\alpha\frac{\omega}{2}(r_1^2+r_2^2)}e^{\frac{r_{12}}{2(1+\beta r_{12})}}
+\psi_T^1(\vb{r}_1,\vb{r}_2)&=e^{-\alpha\frac{\omega}{2}(r_1^2+r_2^2)}\label{eq:wave1}\\
+\psi_T^2(\vb{r}_1,\vb{r}_2)&=e^{-\alpha\frac{\omega}{2}(r_1^2+r_2^2)}e^{\frac{r_{12}}{2(1+\beta r_{12})}}\label{eq:wave2}
 \end{align}
 \end{subequations}
-where \(\vb{r}_i=(x_i,y_i,z_i)\), \(r_i^2=x_i^2+y_i^2+z_i^2\), \(r_{12}=||\vb{r}_1-\vb{r}_2||\), and \(\alpha\) and \(\beta\) are variational parameters.
+where \(\vb{r}_i=(x_i,y_i,z_i)\), \(r_i^2=x_i^2+y_i^2+z_i^2\), \(r_{12}=||\vb{r}_1-\vb{r}_2||\), and \(\alpha\) and \(\beta\) are variational parameters. The former is the solution to the unperturbed system (two non-interacting electrons in a harmonic oscillator) while the latter is a perturbed solution, where the added factor is known as a ``\emph{Jastrow factor}''.
 
 Clearly, \(\psi_T^1\) and \(\psi_T^2\) are not energy eigenstates of \(\HH^\text{sys}\), so they do not have sharp energies. The average energy is given by \(\bra{\psi_T}\hatHH^\text{sys}\ket{\psi_T}/\braket{\psi_T}\), which means it is interesting to know how \(\HH^\text{sys}\psi_T\) looks like. Applying \eqref{eq:main_hamiltonian_position_basis} to the trial wave functions yields:
 \begin{widetext}
 \begin{subequations}\label{eq:main_hamiltonian_act_on_trial_wavefunctions}
 \begin{align}
-\HH^\text{sys}\psi_T^1&=\bigg[3\alpha\omega+\frac{1}{2}\omega^2(r_1^2+r_2^2)(1-\alpha^2)+\frac{1}{r_{12}}\bigg]\psi_T^1=E^1\psi_T^1\\
-\HH^\text{sys}\psi_T^2&=\bigg[E^1+\frac{1}{2(1+\beta r_{12})^2}\Big(\alpha\omega r_{12}-\frac{2}{r_{12}}+\frac{2\beta}{1+\beta r_{12}}-\frac{1}{2(1+\beta r_{12})^2}\Big)\bigg]\psi_T^2=E^2\psi_T^2
+\HH^\text{sys}\psi_T^1&=\bigg[3\alpha\omega+\frac{1}{2}\omega^2(r_1^2+r_2^2)(1-\alpha^2)+\frac{1}{r_{12}}\bigg]\psi_T^1=E^1\psi_T^1\label{eq:wave1_local_energy}\\
+\HH^\text{sys}\psi_T^2&=\bigg[E^1+\frac{1}{2(1+\beta r_{12})^2}\Big(\alpha\omega r_{12}-\frac{2}{r_{12}}+\frac{2\beta}{1+\beta r_{12}}-\frac{1}{2(1+\beta r_{12})^2}\Big)\bigg]\psi_T^2=E^2\psi_T^2\label{eq:wave2_local_energy}
 \end{align}
 \end{subequations}
 \end{widetext}
@@ -508,7 +508,7 @@ where \(\hat{\delta}\sim\mathcal{U}_6(-\delta,\delta)\) is a vector of random nu
 meaning \(\ln(2)\geq\alpha\omega||\hat{\delta}||^2\). So far it is unclear how \(\delta\) is related to \(||\hat{\delta}||^2\), however, trial and error have shown that \(\delta=\ln(2)\) yields an acceptance rate of about 52\% when \(\alpha\omega=1\). For \(\alpha\omega\) values below 1, \(\ln(2)\) becomes a little to small as acceptance quickly soars above 80\%. Knowing that \eqref{eq:VMC_probability_ratios} is exponential, it is likely that \(A\) is logarithmic in \(\alpha\omega\). Hence, propose the relationship \(\delta=\ln(\alpha\omega+1)\), which becomes \(\ln(2)\) when \(\alpha\omega=1\). It turns out that this is not enough for small \(\alpha\omega\) values. What is needed is some functional that is zero for \(\alpha\omega\) values close to 1, but peaks for small values, the easiest example of such a relationship is something like:
 \[\frac{1}{x+a}-\frac{1}{1+a}\]
 where \(a\) is parameter. After some trial and error, the following \(\delta(\alpha\omega)\) function was found to work very well for most \(\alpha\omega\) values:
-\begin{equation}
+\begin{equation}\label{eq:MC_max_step}
 \delta(\alpha\omega)=\ln(\alpha\omega+1)+\frac{1}{\alpha\omega+\frac{1}{4}}-\frac{1}{1+\frac{1}{4}}
 \end{equation}
 In fact, the formula can be comfortably used for both \(A_1\) and \(A_2\) with \(\alpha\omega\) values greater than 0.02, yielding an acceptance ratio of approximately \(50\pm4\)\%. For \(\alpha\omega\) vaues below 0.02 the acceptance ratio increases rapidly, reaching somewhere between 70\% and 80\%  already by \(\alpha\omega=0.01\).
@@ -538,8 +538,32 @@ The final Variational Monte Carlo Algorithm is listed below, note that it does n
 \end{algorithm}
 
 \subsection{Experiments}
-The following section discusses the experiments run in this project.
-\subsubsection{Experiment 1}
+The following section discusses the experiments run in this project. For simplicity, let ``wave 1'' and ``wave 2'' refer to trial wave functions \eqref{eq:wave1} and \eqref{eq:wave2} respectively.
+\subsubsection{Experiment 1 - Monte Carlo stability}
+Before analysing the variational parameter space it is important run a Monte Carlo cycle cost analysis such that computational power is not uneccessarily spent on immeasureable details. Because the Monte Carlo algorithm is only tied to the system through \eqref{eq:MC_max_step}, which only regulates the acceptance ratio of the algorithm, it is thus reasonable to assume all systems (meaning all system-parameter combinations) will behave fairly similar with respect to the number of Monte Carlo cycles. For simplicity then, only the wave 1 system with \(\alpha=\omega=1\) is considered.
+
+Seeing that the point of the experiment is to quantify stability, no Metropolis burn-in is considered. More specifically, the goal of the experiment is to study how the trial energy and energy variance integrals behave with increasing number of Monte Carlo cycles. To this extent, 21 unique \(N_\text{MC}\) values logarithmically spaced between \(10^2\) and \(10^7\) are studied. Expectedly however, simulations with a small number of Monte Carlo cycles will probably not have their integrals converge close to true values. Therefore, each simulation will be repeated 50 times in order to survey the distribution of integral values with respect to Monte Carlo cycles.
+\subsubsection{Experiment 2 - Wave 1 optimization}
+The aim of this experiment is to analyse the parameter space of wave 1, namely \(\{\alpha\}\), in order to minimize the trial energy. Seeing that the energy minimum of the unperturbed system has \(\alpha=1\), it natural to investigate \(\alpha\) values close to 1. The experiment consists of 5 repetitions of 100 \(\alpha\) values between 0.5 and 1.5. The repetitions are introduced to ensure the integrals converge to a satisfactory margin.
+
+It is unlikely that the optimal \(\alpha\) is exactly one of the 100 values, thus the final minimum is found using a polynomial interpolation of the \(E_T(\alpha)\) data points. The degree of the polynomial is chosen such that the functional form of the data is captured, while avoiding overfitting.
+
+Having found the optimal \(\alpha\), the final task of this experiment is to study the ground state's electron separation, in particular as a function of the harmonic oscillator frequency. Using the optimal \(\alpha\), the simulation is run 5 times for 100 \(\omega\) values between 0.05 and 1.00.
+\subsubsection{Experiment 3 - Wave 2 optimization}
+Mirroring experiment 2, the aim of this experiment is to analyse the parameter space of wave 2, namely \(\{\alpha,\beta\}\), in order to minimize the trial energy. As opposed to wave 1's one-dimensional parameter space, wave 2's parameter space is two-dimensional, and thus requires many more simulation runs. The naive approach to this optimization problem is to select a very large grid of \((\alpha,\beta)\) values with very fine spacing and then wait for 100 years. Obviously this is unfeasible, hence the process must be divided into sections. The idea is still the same: run simulations for a large grid of \((\alpha,\beta)\) values, however with reasonable grid spacing. Next, find the region of the grid where the minimum is most likely located, then choose this region as the next grid with a more fine grid spacing. And so on. This iterative process will naturally end when the difference in trial energies between neighbouring grid points becomes less than the fluctuations in the energy integrals due to Monte Carlo instability.
+
+Because wave 2 is a perturbation of wave 1, it is reasonable to assume that \(\alpha\) plays a similar role for wave 2, hence the optimial \(\alpha\) value found in the previous experiment is used as a center of the initial range of \(\alpha\) values studied for wave 2. The radius of this range is set to approximately 25\% of the optimal \(\alpha\). There is no particular range of \(\beta\) values that is more likely to contain the optimal \(\beta\) value. However, in complete faith of beautiful mathematics, the \(\beta\) value is probably closer to 1 than to say 10000, thus the range [0.25,1.50] is used in the initial grid.
+
+Arriving on the final grid search, the final optimal \(\alpha\) and \(\beta\) values are found using a polynomial interpolation of the trial energy data points. Again, the polynomial's degree is selected such that the functional form of the data set is preserved, while avoiding overfitting.
+
+With the optimal variational parameters, the ground state's electron separation is again studied as a function of the harmonic oscillator frequency. Again, the simulation is run 5 times for 100 \(\omega\) values between 0.05 and 1.00.
+\subsubsection{Experiment 4 - Energy balance}
+As a final test of the optimal variational wave functions, the virial theorem is put to the test. For this experiment, only the optimal trial wave functions are used. The goal is to estimate the ratio \(\expval{V}/\expval{K}\) (potential to kinetic energy) as a function of the harmonic oscillator frequency. Moreover, of academic interest, the potential-kinetic energy ratio will be computed with and in the absence of the interaction term (i.e. \(1/r_{12}\)) in order to study its effects on the balance between kinetic and potential energy.
+
+The simulations are run for 100 \(\omega\) values between 0.05 and 1.00, and repeated 5 times in order to capture any spread in the kinetic and potential energies. Because there are 4 different scenarios (2 waves with or without the interaction), the total number of simulations is \(4\cdot5\cdot100=2000\). Having produced the results, the energy ratios are displayed as functions of \(\omega\).
+
+Note that the variational parameters are chosen using the previous experiments, which all included the interaction. It follows that the non-interacting scenarios will not achive \(\expval{V}/\expval{K}=1\), as is true for the harmonic oscillator in the ground state.
+
 
 
 
@@ -547,6 +571,84 @@ The following section discusses the experiments run in this project.
 
 
 \section{Results}
+\subsection{Experiment 1}
+The distribution of the trial energy and energy variance integrals as functions of Monte Carlo cycles is shown in figure \ref{fig:wave1_stability}. As a general rule, the results seem to converge on \(E_T\cong3.8\) after about \(10^5\) cycles and on \(\text{Var}[E]\cong0.35\) after just under \(10^7\) cycles. In addition to the energy integrals, figure \ref{fig:wave1_stability} also features the simulations' corresponding distribution of average acceptance ratios (accepted cycles divided by total cycles). This distribution mirrors the trial energy distribution and converges on 50\% after some \(10^5\) cycles.
+
+To strike a compromise between efficiency and precision, future experiments will be run using a Metropolis burn-in of \(10^5\) cycles and \(10^5\) cycles for the Monte Carlo integration.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.34]{../results/wave1/stability_2_edited.png}
+\caption{The distribution of wave 1 trial energy and energy variance integrals as a function of the number of Monte Carlo cycles. The harmonic oscillator frequency is \(\omega=1\) and wave 1 variational parameter is \(\alpha=1\). The lower plot shows the average Monte Carlo acceptance ratio.}\label{fig:wave1_stability}
+\end{figure}
+\subsection{Experiment 2}
+The results of the experiment are shown in figure \ref{fig:wave1_optimization}. Most notably, there is good agreement between the trial energy minimum and the energy variance minimum, in addition the acceptance ratio is fairly well-behaved in the region surrounding the energy minimum. The trial energy data was regressed against a polynomial of degree 5, as seen in figure \ref{fig:wave1_polyfit}, and found an energy minimum of about 3.773 Hartree using an optimal \(\alpha\) of about 0.8794. The expected electron separation using the optimal \(\alpha\) is shown in figure \ref{fig:wave1_separation}. As expected, the electrons are, on average, closer when the oscillator's strength is greater, and vice versa.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.34]{../results/wave1/energy_minimization_2.png}
+\caption{Variational Monte Carlo energy minimization of wave 1. The optimal \(\alpha\) is approximately 0.8794 with a corresponding energy minimum of about 3.773 Hartree.}\label{fig:wave1_optimization}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.34]{../results/wave1/energy_minimum_deg5polyfit_2.png}
+\caption{\(5^\text{th}\) degree polynomial interpolation of the trial energy data in figure \ref{fig:wave1_optimization}.}\label{fig:wave1_polyfit}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.34]{../results/wave1/expected_separation_3.png}
+\caption{The expected separation between the electrons using the optimal wave 1 variational parameter \(\alpha=0.8794\).}\label{fig:wave1_separation}
+\end{figure}
+
+\subsection{Experiment 3}
+The results of the initial and final grid searches are shown in figure \ref{fig:wave2_optimization}, the intermediate grid searches can be found on the GitHub repository. The trial error was found to behave quite well with respect to a \(5^\text{th}\) order polynomial regressor, the polynomial interpolation is show in figure \ref{fig:wave2_polyfit}. The minimum energy of the polynomial interpolation was found to be about 3.730 Hartree, which is a lower than the wave 1 minimum energy by a 0.043 Hartre, using optimal variational parameters \(\alpha=0.9726\) and \(\beta=0.2405\). Using the optimal parameters the expected distance between the electrons was computed for the various oscillator frequencies, the results are shown in figure \ref{fig:wave2_separation}. The results are very similar to the results of experiment 2.
+
+
+\onecolumngrid
+\clearpage
+~
+\hspace*{8cm}
+\begin{figure}[h!]
+\centering
+	\begin{subfigure}[b]{0.48\textwidth}
+	\centering
+	\includegraphics[scale=0.7]{../results/wave2/energy_minimization_1.png}
+	\caption{\((\alpha,\beta)\in[0.65,1.05]\times[0.25,1.50]\)}\label{fig:wave2_optimization1}
+	\end{subfigure}
+	~
+	\begin{subfigure}[b]{0.48\textwidth}
+	\centering
+	\includegraphics[scale=0.7]{../results/wave2/energy_minimization_5.png}
+	\caption{\((\alpha,\beta)\in[0.972,1.012]\times[0.24,0.28]\)}\label{fig:wave2_optimization2}
+	\end{subfigure}
+\caption{Variational Monte Carlo energy minimization of wave 2. The two figures use different \((\alpha,\beta)\) grids.}\label{fig:wave2_optimization}
+\end{figure}
+\clearpage
+\twocolumngrid
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.6]{../results/wave2/energy_minimization_deg5polyfit_5.png}
+\caption{\(5^\text{th}\) degree polynomial interpolation of the trial energy data in figure \ref{fig:wave2_optimization2}. Note that the colours of the polynomial interpolation does not correspond to the colours in \ref{fig:wave2_optimization2}, despite use of the same matplotlib colormap.}\label{fig:wave2_polyfit}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.34]{../results/wave2/expected_separation_1_edited.png}
+\caption{The expected separation between the electrons using the optimal wave 2 variational parameters \(\alpha=0.9726\) and \(\beta=0.2405\).}\label{fig:wave2_separation}
+\end{figure}
+
+\subsection{Experiment 4}
+The electron-electron energy balance is shown in figure \ref{fig:virial}. The non-interacting data is very stable for all \(\omega\), which is reasonble given the fact that is constant for the ground state. The interacting data sets both increase with decreasing \(\omega\), especially the interacting wave 1 dat set grows faster than the wave 2 data set.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.5]{../results/virial/energy_balance_2.png}
+\caption{The balance between the potential and kinetic energy of two electrons in a harmonic oscillator. The four data sets refer to wave 1 and 2, with or without a Coulomb interaction.}\label{fig:virial}
+\end{figure}
+
 
 
 \section{Discussion}

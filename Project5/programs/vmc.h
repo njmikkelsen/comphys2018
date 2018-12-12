@@ -25,17 +25,20 @@ class VMC {
     // Monte Carlo simulations
     void run_MonteCarlo_energy     (TrialWave,int,int,double&,double&,double&);  // compute energy integrals
     void run_MonteCarlo_separation (TrialWave,int,int,double&,double&,double&);  // compute expected particle separation
+    void run_MonteCarlo_virial     (TrialWave,int,int,double&,double&,double&);  // compute expected kinetic & potential energy
 };
 
 class TrialWave {
   private:
     // trial wave parameter variables
+    bool   INTER;      // indicates whether the electrons should interact
     int    TYPE;       // indicates which trial wave is used, available: 1 or 2
     double omega;      // Harmonic Oscillator frequency
     double alpha;      // variational parameter
     double beta;       // variational parameter
     double constant1;  // alpha*omega
-    double constant2;  // 0.5*omega*omega(1-alpha*alpha)
+    double constant2;  // 0.5*omega*omega
+    double constant3;  // 0.5*omega*omega*alpha*alpha
 
     // previous trial wave state variables
     Vector R1_prev;   // particle 1 position
@@ -64,18 +67,25 @@ class TrialWave {
     Vector draw_vector ();                    // draw random vector
     
     // wave-specific functions
-    double Wave1_alphaM      ();  // wave 1, Metropolis choice
-    double Wave2_alphaM      ();  // wave 2, Metropolis choice
-    double Wave1_LocalEnergy ();  // wave 1, Local energy
-    double Wave2_LocalEnergy ();  // wave 1, Local energy
+    double Wave1_alphaM        ();  // wave 1, Metropolis choice
+    double Wave2_alphaM        ();  // wave 2, Metropolis choice
+    double Wave1_KineticEnergy ();  // wave 1, kinetic energy
+    double Wave2_KineticEnergy ();  // wave 2, kinetic energy
     
-    // function pointers (chosen based on TYPE)
-    double (TrialWave::*alphaM_)      ();
-    double (TrialWave::*LocalEnergy_) ();
+    
+    // function pointers (chosen based on TYPE and INTER)
+    double (TrialWave::*alphaM_)          ();
+    double (TrialWave::*LocalEnergy_)     ();
+    double (TrialWave::*KineticEnergy_)   ();
+    double (TrialWave::*PotentialEnergy_) ();
+    
+    // interaction functions
+    double dont_interact ();  // returns 0
+    double do_interact   ();  // returns Coulomb interaction
     
   public:
     // constructor & destructor
-    TrialWave  (int,double);
+    TrialWave  (int,double,bool=true);
     ~TrialWave () {};
     
     // set variational parameters
@@ -83,11 +93,13 @@ class TrialWave {
     void setVarParams (double);           // set alpha
     
     // functions accessed by VMC class
-    void   propose_state ();
-    void   update_state  ();
-    double alphaM        ();
-    double LocalEnergy   ();
-    double separation    ();
+    void   propose_state   ();
+    void   update_state    ();
+    double alphaM          ();
+    double LocalEnergy     ();
+    double KineticEnergy   ();
+    double PotentialEnergy ();
+    double separation      ();
 };
 
 #endif

@@ -100,6 +100,48 @@ void VMC::run_MonteCarlo_separation (TrialWave psi, int N_MC, int N_burn, double
   acceptance = (double)a*scale;
 };
 
+void VMC::run_MonteCarlo_virial (TrialWave psi, int N_MC, int N_burn, double& Kinetic, double& Potential, double& acceptance)
+{
+  // misc declerations
+  double A;                           // Metropolis choice
+  double b;                           // probability of acceptance
+  int    a     = 0;                   // number of accepted proposals in Monte Carlo integration
+  double K     = 0;                   // Monte Carlo sum: kinetic energy
+  double V     = 0;                   // Monte Carlo sum: potential energy
+  double scale = 1/((double)N_MC);    // Monte Carlo normalization scale
+  
+  // Metropolis burn in
+  for (int n=0; n<N_burn; n++) {
+    // propose state and compute Metropolis choice
+    psi.propose_state();
+    A = psi.alphaM();
+    b = draw_prob();
+    // update state if proposal is accepted
+    if (b <= A) {psi.update_state();};
+  };
+  
+  // re-seed Random Number Generator (avoid running out of random numbers)
+  RNG.seed((random_device())());
+   
+  // Monte Carlo integration
+  for (int n=0; n<N_MC; n++) {
+    // propose state and compute Metropolis choice
+    psi.propose_state();
+    A = psi.alphaM();
+    b = draw_prob();
+    // update state if proposal is accepted
+    if (b <= A) {a++; psi.update_state();};
+    // update Monte Carlo integrals
+    K  += psi.KineticEnergy();
+    V  += psi.PotentialEnergy();
+  };
+  
+  // normalize Monte Carlo integrals & compute acceptance
+  Kinetic    = K*scale;
+  Potential  = V*scale;
+  acceptance = (double)a*scale;
+};
+
 
 /*
 -------------------------------------------
@@ -107,23 +149,30 @@ void VMC::run_MonteCarlo_separation (TrialWave psi, int N_MC, int N_burn, double
 -------------------------------------------
 */
 
-TrialWave::TrialWave (int type, double omega_) : omega(omega_), RNG((random_device())()) {
+TrialWave::TrialWave (int type, double omega_, bool inter) : RNG((random_device())()) {
+  // define
+  omega = omega_;
+  INTER = inter;
   // select trial wave
   if (type == 1) {
-    TYPE         = type;
-    alphaM_      = &TrialWave::Wave1_alphaM;
-    LocalEnergy_ = &TrialWave::Wave1_LocalEnergy;
+    TYPE           = type;
+    alphaM_        = &TrialWave::Wave1_alphaM;
+    KineticEnergy_ = &TrialWave::Wave1_KineticEnergy;
   } else if (type == 2) {
-    TYPE         = type;
-    alphaM_      = &TrialWave::Wave2_alphaM;
-    LocalEnergy_ = &TrialWave::Wave2_LocalEnergy;
+    TYPE           = type;
+    alphaM_        = &TrialWave::Wave2_alphaM;
+    KineticEnergy_ = &TrialWave::Wave2_KineticEnergy;
   } else {
     cout << "Error: Invalid wave TYPE. Expected 1 or 2." << endl;
     cout << "Selecting default: TYPE = 1" << endl;
-    TYPE         = 1;
-    alphaM_      = &TrialWave::Wave1_alphaM;
-    LocalEnergy_ = &TrialWave::Wave1_LocalEnergy;
+    TYPE           = 1;
+    alphaM_        = &TrialWave::Wave1_alphaM;
+    KineticEnergy_ = &TrialWave::Wave1_KineticEnergy;
   };
+
+  // define electron-electron interaction
+  if      (INTER == false) {PotentialEnergy_ = &TrialWave::dont_interact;}
+  else if (INTER == true)  {PotentialEnergy_ = &TrialWave::do_interact;};  
   
   // initialize default variational parameters: alpha = 1, beta = 0
   setVarParams(1.0);
@@ -149,7 +198,8 @@ void TrialWave::setVarParams (double alpha_, double beta_) {
   alpha     = alpha_;
   beta      = beta_;
   constant1 = alpha*omega;
-  constant2 = 0.5*omega*omega*(1-alpha*alpha);
+  constant2 = 0.5*omega*omega;
+  constant3 = constant2*alpha*alpha;
   
   // adjust random state generator
   delta = log(constant1 + 1) + 1./(constant1+0.25) - 1./1.25;
@@ -191,22 +241,27 @@ void TrialWave::update_state () {
   if (TYPE == 2) {denom_prev = denom_next;};
 };
 
-double TrialWave::alphaM      () {return (this->*alphaM_)     ();};
-double TrialWave::LocalEnergy () {return (this->*LocalEnergy_)();};
-double TrialWave::separation  () {return r12_prev;};
+double TrialWave::alphaM          () {return (this->*alphaM_)         ();};
+double TrialWave::KineticEnergy   () {return (this->*KineticEnergy_)  ();};
+double TrialWave::PotentialEnergy () {return (this->*PotentialEnergy_)();};
+double TrialWave::separation      () {return r12_prev;};
+double TrialWave::LocalEnergy     () {return KineticEnergy() + PotentialEnergy();};
+
+// electron-eletron interaction
+
+double TrialWave::dont_interact () {return constant2 * (r1_prev2 + r2_prev2);};
+double TrialWave::do_interact   () {return constant2 * (r1_prev2 + r2_prev2) + 1./r12_prev;};
 
 // wave 1 
 
-double TrialWave::Wave1_alphaM      () {return exp( -constant1 * dStateNorm);};
-double TrialWave::Wave1_LocalEnergy () {return 3*constant1 + constant2 * (r1_prev2 + r2_prev2) + 1./r12_prev;};
+double TrialWave::Wave1_alphaM        () {return exp( -constant1 * dStateNorm);};
+double TrialWave::Wave1_KineticEnergy () {return 3*constant1 - constant3 * (r1_prev2 + r2_prev2);};
 
 // wave 2
 
-double TrialWave::Wave2_alphaM      () {return exp( -constant1 * dStateNorm + r12_next/denom_next - r12_prev/denom_prev);};
-double TrialWave::Wave2_LocalEnergy () {
-  double E1          = 3*constant1 + constant2 * (r1_prev2 + r2_prev2) + 1./r12_prev;
+double TrialWave::Wave2_alphaM        () {return exp( -constant1 * dStateNorm + r12_next/denom_next - r12_prev/denom_prev);};
+double TrialWave::Wave2_KineticEnergy () {
   double denom_prev2 = denom_prev*denom_prev;
-  return E1 + 0.5*(constant1 * r12_prev - 2./r12_prev + 2*beta/denom_prev - 0.5/denom_prev2) / denom_prev2;
-  
+  return Wave1_KineticEnergy() + 0.5*(constant1 * r12_prev - 2./r12_prev + 2*beta/denom_prev - 0.5/denom_prev2) / denom_prev2;
 };
 
