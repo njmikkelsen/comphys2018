@@ -4,12 +4,15 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 from progress_bar import progress_bar
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 
 # adjust saved figure dpi
-matplotlib.rcParams.update({'savefig.dpi':300})
+matplotlib.rcParams.update({'savefig.dpi'     : 300,
+                            'xtick.labelsize' : 16,
+                            'ytick.labelsize' : 16   })
 
 # make C++ executable
 def make(program):
@@ -55,7 +58,7 @@ where:
 run_section1 = False   # Analyse the variational parameter space w/ respect to energy
 run_section2 = True    # Analyse expected separation between the electrons
 tag          = "1"     # extra save tag used in np.save/np.load of results
-load_results = False   # if True, skip run computations
+load_results = True    # if True, skip run computations
 
 ###
 ### Section 1: Analyse the variational parameter space w/ respect to energy
@@ -106,7 +109,7 @@ if run_section1:
   # image-plot Average Separation and Average SeparationVariance
   fig,axes = plt.subplots(nrows=3,ncols=1,sharex=True,figsize=(4.6,10))
   
-  fig.suptitle("Variational Monte Carlo\n"+"Energy Minimization",fontsize=20)
+  fig.suptitle("Wave 2 Energy Minimization",fontsize=20)
   
   im1 = axes[0].imshow(TrialEnergy,   cmap="nipy_spectral",aspect=float(len(beta))/float(len(alpha)))
   im2 = axes[1].imshow(EnergyVariance,cmap="nipy_spectral",aspect=float(len(beta))/float(len(alpha)))
@@ -136,7 +139,7 @@ if run_section1:
   fig.colorbar(im3,ax=axes[2])
   
   fig.tight_layout()
-  fig.subplots_adjust(top=0.88,left=0)
+  fig.subplots_adjust(top=0.9,left=0)
   
   fig.savefig("../results/wave2/energy_minimization_{:s}.png".format(tag))
   plt.show()
@@ -166,9 +169,9 @@ if run_section1:
   print("Interpolation residual = {:e}".format(np.linalg.norm(polyfit_residual)))
   
   # plot polynomial interpolation
-  fig,(ax1,ax2) = plt.subplots(nrows=2,ncols=1,figsize=(5.2,10))
+  fig,(ax1,ax2) = plt.subplots(nrows=2,ncols=1,figsize=(5.85,9.35))
   
-  fig.suptitle("{:s} degree polynomial interpolation\n".format(ordinal(deg))+"of Trial Energy data",fontsize=20)
+  fig.suptitle("{:s} Degree Polyfit of\n".format(ordinal(deg))+"Wave 2 Energy Minimum",fontsize=20)
   
   im1 = ax1.imshow(TrialEnergy_polyfit,cmap="nipy_spectral")
   im2 = ax2.imshow(polyfit_residual,   cmap="nipy_spectral",aspect=float(len(alpha))/float(len(beta)))
@@ -193,19 +196,19 @@ if run_section1:
   ax2.set_xticklabels(xticklabels)
   ax2.set_yticklabels(yticklabels)
   
-  fig.colorbar(im1,ax=ax1)
-  fig.colorbar(im2,ax=ax2)
+  fig.colorbar(im1,ax=ax1,fraction=0.0455)
+  fig.colorbar(im2,ax=ax2,fraction=0.0455)
 
   fig.tight_layout()
-  fig.subplots_adjust(top=0.88)  
+  fig.subplots_adjust(top=0.86,right=0.825)  
   
   plt.savefig("../results/wave2/energy_minimization_deg{:d}polyfit_{:s}.png".format(deg,tag))
   plt.show()
   
   # find energy minimum
-  idx_min = np.unravel_index(TrialEnergy_.argmin(),TrialEnergy_.shape)
+  idx_min = np.unravel_index(TrialEnergy_polyfit.argmin(),TrialEnergy_polyfit.shape)
   print("Section 2 Energy minimum:")
-  print("E     = {:.8e}".format(TrialEnergy_[idx_min]))
+  print("E     = {:.8e}".format(TrialEnergy_polyfit[idx_min]))
   print("alpha = {:.8e}".format(Alpha_[idx_min]))
   print("beta  = {:.8e}".format(Beta_[idx_min]))
   

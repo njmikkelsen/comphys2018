@@ -7,7 +7,9 @@ from matplotlib.ticker import FormatStrFormatter
 from progress_bar import progress_bar
 
 # adjust saved figure dpi
-matplotlib.rcParams.update({'savefig.dpi':300})
+matplotlib.rcParams.update({'savefig.dpi'     : 300,
+                            'xtick.labelsize' : 12,
+                            'ytick.labelsize' : 12   })
 
 # run program and extract command line output
 def run_program(interaction,omega,alpha,beta,wave,N_MC,N_burn):
@@ -105,27 +107,32 @@ else:
   Acceptance])
 
 
-# prepare <T>/<K> arrays
-TK1_non = PotentialEnergy1_non/KineticEnergy1_non
-TK1_int = PotentialEnergy1_int/KineticEnergy1_int
-TK2_non = PotentialEnergy2_non/KineticEnergy2_non
-TK2_int = PotentialEnergy2_int/KineticEnergy2_int
+# prepare <V>/<K> arrays
+VK1_non = PotentialEnergy1_non/KineticEnergy1_non
+VK1_int = PotentialEnergy1_int/KineticEnergy1_int
+VK2_non = PotentialEnergy2_non/KineticEnergy2_non
+VK2_int = PotentialEnergy2_int/KineticEnergy2_int
 
 # plot arrays
-fig = plt.figure(figsize=(6,4))
+fig = plt.figure(figsize=(5.8,4.5))
 ax  = fig.add_subplot(111)
 
-ax.set_title(r"Energy balance for 2 electrons in a harmonic oscillator",fontsize=14)
+ax.set_title(r"Energy balance for 2 electrons in a harmonic oscillator",fontsize=14,pad=10)
 
-ax.scatter(omega,TK1_non,s=1.7,c='r',label="non-int wave 1")
-ax.scatter(omega,TK1_int,s=1.7,c='b',label="int wave 1")
-ax.scatter(omega,TK2_non,s=1.7,c='g',label="non-int wave 2")
-ax.scatter(omega,TK2_int,s=1.7,c='k',label="int wave 2")
+ax.scatter(omega,VK1_non,s=1.7,c='r',label="non-int wave 1")
+ax.scatter(omega,VK1_int,s=1.7,c='b',label="int wave 1")
+ax.scatter(omega,VK2_non,s=1.7,c='g',label="non-int wave 2")
+ax.scatter(omega,VK2_int,s=1.7,c='k',label="int wave 2")
 
 ax.legend()
+
+ax.set_xlim([0.0,1.0])
+ax.set_ylim([1.0,4.0])
   
 ax.set_xlabel(r"$\omega$",fontsize=12)
-ax.set_ylabel(r"$<T>/<K>$",fontsize=12)
+ax.set_ylabel(r"$\left\langle V\right\rangle\ \ /\ \ \left\langle K\right\rangle$",fontsize=12)
+
+fig.subplots_adjust(top=0.92,right=0.93)
 
 fig.savefig("../results/virial/energy_balance_{:s}.png".format(tag))
 plt.show()

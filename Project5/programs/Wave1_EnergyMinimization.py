@@ -6,7 +6,9 @@ import matplotlib
 from progress_bar import progress_bar
 
 # adjust saved figure dpi
-matplotlib.rcParams.update({'savefig.dpi':300})
+matplotlib.rcParams.update({'savefig.dpi'     : 300,
+                            'xtick.labelsize' : 16,
+                            'ytick.labelsize' : 16   })
 
 # make C++ executable
 def make(program):
@@ -48,11 +50,11 @@ where:
 """
 
 # quick-selection
-run_section1 = False   # Analyse Monte Carlo stability
-run_section2 = False   # Analyse the variational parameter space w/ respect to energy minimization
-run_section3 = True    # Analyse expected separation between the electrons
-tag          = "3"     # extra save tag used in np.save/np.load of results
-load_results = False   # if True, skip run computations
+run_section1 = False  # Analyse Monte Carlo stability
+run_section2 = True   # Analyse the variational parameter space w/ respect to energy minimization
+run_section3 = False   # Analyse expected separation between the electrons
+tag          = "2"     # extra save tag used in np.save/np.load of results
+load_results = True    # if True, skip run computations
 
 ###
 ### Section 1: Analyse Monte Carlo stability
@@ -165,7 +167,7 @@ if run_section2:
   # scatter-plot TrialEnergy, EnergyVariance and acceptance
   fig,axes = plt.subplots(nrows=3,ncols=1,sharex=True,figsize=(10,8))
   
-  fig.suptitle("Variational Monte Carlo Energy Minimization",fontsize=20)
+  fig.suptitle("Wave 1 Energy Minimization",fontsize=20)
   
   axes[0].scatter(alpha,TrialEnergy,   s=2.0,c='r',marker='o')
   axes[1].scatter(alpha,EnergyVariance,s=2.0,c='r',marker='o')
@@ -190,16 +192,21 @@ if run_section2:
   # polynomial regression of TrialEnergy
   deg          = 5
   p            = np.polyfit(alpha.ravel(),TrialEnergy.ravel(),deg)
-  alpha_       = np.linspace(alpha.min()*0.9,alpha.max()*1.1,20000)
+  alpha_       = np.linspace(alpha.min()*0.95,alpha.max()*1.05,20000)
   TrialEnergy_ = np.sum([p[i]*alpha_**(len(p)-1-i) for i in range(len(p))],axis=0)
   
+  print("approximate polynomial:")
+  print("p(x) = ",end="",flush=True)
+  [print("{:+.2f}x^{:d}".format(p[i],len(p)-1-i),end=" ",flush=True) for i in range(len(p))]
+  print("")
+  
   # plot polynomial fit on-top of data points
-  fig,ax = plt.subplots(nrows=1,ncols=1,figsize=(10,8))
+  fig,ax = plt.subplots(nrows=1,ncols=1,figsize=(10,5))
   
   ax.scatter(alpha, TrialEnergy, c="b",label="data",s=1.5)
   ax.plot(   alpha_,TrialEnergy_,c="r",label="polyfit")
   
-  ax.set_title("{:s} polynomial approximation of energy minimum".format(ordinal(deg)),fontsize=20)
+  ax.set_title("{:s} Degree Polyfit of Wave 1 Energy Minimum".format(ordinal(deg)),fontsize=20)
   ax.set_xlabel(r"$\alpha$",fontsize=18)
   ax.set_ylabel(r"$E_T(\alpha)$",fontsize=18)
   
