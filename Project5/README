@@ -1,0 +1,27 @@
+The project files are built such that the Python files call the C++ files via the command line.
+The results produced by the C++ files are printed to the command line, which the Python files
+in turn reads and extracts. Plotting and polynomial interpolation is done in Python.
+
+C++ files:
+  VMCcomputation_Energy.cpp:
+    Computes the expected value and variance of the energy of the Helium-like quantum dot system.
+  VMCcomputation_Separation.cpp:
+    Computes the expected value and variance of the electron-electron separation for electrons in the Helium-like quantum dot system.
+  VMCcomputation_Virial.cpp:
+    Computes the expected values of the kinetic and potential energies of the Helium-like quantum dot system.
+  vmc.cpp & vmc.h:
+    Library used by the VMC_computation_.......cpp files to perform a Variational Monte Carlo simulation.
+  vectorlib.cpp & vectorlib.h:
+    Library used by vmc.cpp & vmc.h in order to simplify code using vectors instead of scalars.
+Python 3 files:
+  Wave1_EnergyMinimization.py:
+    Uses VMCcomputation_Energy.cpp and VMCcomputation_Separation.cpp in order to produce the results of Experiments 1 & 2.
+  Wave2_EnergyMinimization.py:
+    Uses VMCcomputation_Energy.cpp and VMCcomputation_Separation.cpp in order to produce the results of Experiment 3.
+  VirialCheck.py:
+    Uses VMCcomputation_Virial.cpp in order to produce the results of Experiment 4.
+  progress_bar.py:
+    Used by the other Python files in order to create a command line progress bar for tracking long loops.
+Other files:
+  makefile:
+    Builds an executable named run.x using one of the VMCcomputation_.......cpp files, and the vmc and vectorlib libraries.
